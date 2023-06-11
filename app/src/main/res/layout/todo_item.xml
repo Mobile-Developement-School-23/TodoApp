@@ -11,6 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="19dp"
+        android:layout_marginTop="10dp"
         android:theme="@style/CheckBox"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -19,25 +20,29 @@
         android:id="@+id/todo_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="15dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="16dp"
         android:ellipsize="end"
         android:maxLines="3"
-        android:textColor="@color/black"
         android:text="Example"
+        android:textColor="@color/black"
         android:textSize="16sp"
-        app:layout_constraintStart_toEndOf="@+id/todo_checkbox"
+        android:layout_marginStart="4dp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toStartOf="@+id/imageView"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@+id/high_priority_image"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
+        android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="1dp"
         android:layout_marginEnd="14dp"
+        android:contentDescription="info"
         android:src="@drawable/ic_info_outline"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="info" />
+        app:layout_constraintTop_toTopOf="@+id/todo_text" />
 
     <TextView
         android:id="@+id/deadline_textview"
@@ -47,5 +52,23 @@
         android:visibility="gone"
         android:text="date"
         app:layout_constraintStart_toStartOf="@+id/todo_text"
+        app:layout_constraintTop_toBottomOf="@+id/todo_text" />
+
+    <ImageView
+        android:id="@+id/high_priority_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:src="@drawable/ic_critical"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/todo_checkbox"
+        app:layout_constraintStart_toEndOf="@id/todo_checkbox"
+        app:layout_constraintTop_toTopOf="@+id/todo_checkbox" />
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="14dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/todo_text" />
 </androidx.constraintlayout.widget.ConstraintLayout>

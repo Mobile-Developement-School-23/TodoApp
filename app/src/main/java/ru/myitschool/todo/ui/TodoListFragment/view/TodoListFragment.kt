@@ -47,9 +47,13 @@ class TodoListFragment : Fragment() {
         }
         binding.todoList.setItemViewCacheSize(adapter.itemCount)
         binding.todoList.adapter = adapter
-        binding.todoList.addItemDecoration(TodoPreviewOffsetItemDecoration(bottomOffset = 20, topOffset = 20))
         binding.addCase.setOnClickListener{
             navController.navigate(R.id.action_todoListFragment_to_additionFragment)
+        }
+        adapter.selectedTodoItem.observe(viewLifecycleOwner){
+            val data = Bundle()
+            data.putString("id", it.id)
+            navController.navigate(R.id.action_todoListFragment_to_additionFragment, data)
         }
     }
 

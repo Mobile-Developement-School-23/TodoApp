@@ -11,4 +11,5 @@
     <string name="make_until">Сделать до</string>
     <string name="low">Низкий</string>
     <string name="high"><font fgcolor="@color/red">Высокий</font></string>
+    <string name="delete">Удалить</string>
 </resources>

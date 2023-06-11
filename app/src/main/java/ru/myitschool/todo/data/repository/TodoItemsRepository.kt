@@ -36,7 +36,14 @@ class TodoItemsRepository {
             todoItems[index] = todoItem
         }
     }
+    fun deleteItem(id:String){
+        val index = todoItems.withIndex().find { it.value.id == id }?.index
+        if (index != null) {
+            todoItems.removeAt(index)
+        }
+    }
     private fun hashString(str:String):String{
         return MessageDigest.getInstance("sha-256").digest(str.toByteArray()).fold("", { str, it -> str + "%02x".format(it) })
     }
+
 }
