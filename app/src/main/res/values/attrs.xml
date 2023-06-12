@@ -3,4 +3,8 @@
         <attr name="fullscreenBackgroundColor" format="color" />
         <attr name="fullscreenTextColor" format="color" />
     </declare-styleable>
+    <attr name="inactiveColor" format="reference|color"/>
+    <attr name="separatorColor" format="reference|color"/>
+    <attr name="infoButtonColor" format="reference|color"/>
+    <attr name="checkBoxInactiveColor" format="reference|color"/>
 </resources>

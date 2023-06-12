@@ -24,7 +24,7 @@
         android:ellipsize="end"
         android:maxLines="3"
         android:text="Example"
-        android:textColor="@color/black"
+        android:textColor="?attr/textFillColor"
         android:textSize="16sp"
         android:layout_marginStart="4dp"
         app:layout_constrainedWidth="true"
@@ -39,7 +39,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="1dp"
         android:layout_marginEnd="14dp"
-        android:contentDescription="info"
+        app:tint="?attr/infoButtonColor"
+        android:contentDescription="@string/info"
         android:src="@drawable/ic_info_outline"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/todo_text" />
