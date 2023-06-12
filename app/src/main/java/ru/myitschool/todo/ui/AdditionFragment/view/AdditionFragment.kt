@@ -44,7 +44,7 @@ class AdditionFragment : Fragment() {
         navController = NavHostFragment.findNavController(this)
         errorToast = Toast.makeText(
             requireContext(),
-            "Текстовое поле не должно быть пустым",
+            resources.getString(R.string.addition_error),
             Toast.LENGTH_SHORT
         )
         viewModel = ViewModelProvider(this)[AdditionViewModel::class.java]
