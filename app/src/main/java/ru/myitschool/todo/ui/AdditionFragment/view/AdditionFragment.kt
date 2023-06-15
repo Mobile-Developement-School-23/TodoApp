@@ -1,20 +1,17 @@
 package ru.myitschool.todo.ui.AdditionFragment.view
 
 import android.app.DatePickerDialog
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.DatePicker
 import android.widget.PopupMenu
 import android.widget.Toast
-import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -92,7 +89,7 @@ class AdditionFragment : Fragment() {
                 viewModel.setText(binding.todoEditText.text.toString())
             }
         })
-        binding.deadlineSwitcher.setOnCheckedChangeListener { buttonView, isChecked ->
+        binding.deadlineSwitcher.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (viewModel.deadlineDate.value == null) {
                     showDatePickerDialog()
@@ -150,7 +147,7 @@ class AdditionFragment : Fragment() {
 
     private fun showDatePickerDialog() {
         val datePicker = DatePickerDialog(requireContext())
-        datePicker.setOnDateSetListener { view, year, month, dayOfMonth ->
+        datePicker.setOnDateSetListener { _, year, month, dayOfMonth ->
             val date = Date(year - 1900, month, dayOfMonth)
             viewModel.setDeadline(date)
         }

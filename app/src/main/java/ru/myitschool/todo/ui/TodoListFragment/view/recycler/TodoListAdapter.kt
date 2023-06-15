@@ -25,13 +25,13 @@ import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.domain.CommonCallbackImpl
 import ru.myitschool.todo.repository.TodoItemsRepository
 import ru.myitschool.todo.ui.TodoListFragment.viewModel.TodoListViewModel
-import ru.myitschool.todo.ui.recycler.ItemTouchHelperAdapter
+import ru.myitschool.todo.ui.TodoListFragment.view.recycler.ItemTouchHelperAdapter
 import java.util.*
 
 
 class TodoListAdapter(
     private val viewModel:TodoListViewModel
-) : RecyclerView.Adapter<TodoListAdapter.TodoListHolder>(),ItemTouchHelperAdapter{
+) : RecyclerView.Adapter<TodoListAdapter.TodoListHolder>(), ItemTouchHelperAdapter {
     var todoList = mutableListOf<TodoItem>()
         set(value) {
             var counter = 0
@@ -143,8 +143,7 @@ class TodoListAdapter(
     }
 
     override fun onItemDismiss(position: Int) {
-        todoList.removeAt(position)
+        viewModel.deleteItem(todoList[position].id)
         notifyItemRemoved(position)
-        viewModel.
     }
 }

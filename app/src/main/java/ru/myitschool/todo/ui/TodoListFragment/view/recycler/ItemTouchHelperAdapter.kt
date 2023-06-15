@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.recycler
+package ru.myitschool.todo.ui.TodoListFragment.view.recycler
 
 interface ItemTouchHelperAdapter {
     fun onItemDismiss(position:Int)

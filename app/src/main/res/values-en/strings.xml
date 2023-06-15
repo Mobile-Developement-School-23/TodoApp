@@ -15,4 +15,5 @@
     <string name="addition_error">The text field should not be empty</string>
     <string name="delete">Delete</string>
     <string name="info">Info</string>
+    <string name="blank">Blank</string>
 </resources>

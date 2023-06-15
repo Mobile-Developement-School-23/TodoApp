@@ -2,6 +2,9 @@ package ru.myitschool.todo.ui.AdditionFragment.viewModel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.repository.TodoItemsRepository
@@ -50,11 +53,15 @@ class AdditionViewModel : ViewModel() {
     fun loadTodoItem(id: String) {
         canDelete = true
         val todoItem = repository.getItemById(id)
-        text.value = todoItem?.text
-        deadlineDate.value = todoItem?.deadline
-        priority.value = todoItem?.priority
-        isCompleted = todoItem?.isCompleted
-        creationDate = todoItem?.creationDate
+        viewModelScope.launch {
+            todoItem.collect{
+                text.value = it?.text
+                deadlineDate.value = it?.deadline
+                priority.value = it?.priority
+                isCompleted = it?.isCompleted
+                creationDate = it?.creationDate
+            }
+        }
         this.id = id
     }
     fun deleteTodoItem(){

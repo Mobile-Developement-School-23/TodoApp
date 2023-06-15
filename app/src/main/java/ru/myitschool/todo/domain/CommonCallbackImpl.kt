@@ -1,9 +1,8 @@
 package ru.myitschool.todo.domain
 
 import androidx.recyclerview.widget.DiffUtil
-import ru.myitschool.todo.data.models.TodoItem
 
-class TodoCallbackImpl<T>(
+class CommonCallbackImpl<T>(
     private val oldItems: List<T>,
     private val newItems: List<T>,
     private val areItemsTheSameImpl: (oldItem: T, newItem: T) -> Boolean = { oldItem, newItem ->
