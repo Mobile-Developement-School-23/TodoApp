@@ -13,19 +13,82 @@ class TodoItemsRepository {
         private var created = false
         private val _todoItems = MutableLiveData(mutableListOf<TodoItem>())
     }
+
     val todoItems = _todoItems
+
     init {
         if (!created) {
             created = true
-            addItem(TodoItem("1", "Сделать курсовую!", Priority.HIGH, false, Date()))
+            addItem(
+                TodoItem(
+                    "1",
+                    "Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!Сделать курсовую!",
+                    Priority.HIGH,
+                    true,
+                    Date(),
+                    deadline = Date()
+                )
+            )
             addItem(TodoItem("1", "Сделать курсовую!!", Priority.LOW, false, Date()))
             addItem(TodoItem("1", "Сделать курсовую!!!", Priority.NORMAL, false, Date()))
             addItem(TodoItem("1", "Сделать курсовую!!!!", Priority.HIGH, false, Date()))
             addItem(TodoItem("1", "Сделать курсовую!!!!!", Priority.LOW, false, Date()))
             addItem(TodoItem("1", "Сделать курсовую!!!!!!", Priority.NORMAL, false, Date()))
+            addItem(
+                TodoItem(
+                    "1",
+                    "Сделать курсовую!!!!!!!",
+                    Priority.HIGH,
+                    false,
+                    Date(),
+                    deadline = Date()
+                )
+            )
+            addItem(TodoItem("1", "Сделать курсовую!", Priority.HIGH, false, Date()))
+            addItem(TodoItem("1", "Сделать курсовую!!", Priority.LOW, false, Date()))
+            addItem(
+                TodoItem(
+                    "1",
+                    "Сделать курсовую!!!",
+                    Priority.NORMAL,
+                    true,
+                    Date(),
+                    deadline = Date()
+                )
+            )
+            addItem(TodoItem("1", "Сделать курсовую!!!!", Priority.HIGH, false, Date()))
+            addItem(TodoItem("1", "Сделать курсовую!!!!!", Priority.LOW, false, Date()))
+            addItem(TodoItem("1", "Сделать курсовую!!!!!!", Priority.NORMAL, true, Date()))
+            addItem(
+                TodoItem(
+                    "1",
+                    "Сделать курсовую!!!!!!!",
+                    Priority.HIGH,
+                    false,
+                    Date(),
+                    deadline = Date()
+                )
+            )
+            addItem(TodoItem("1", "Сделать курсовую!", Priority.HIGH, false, Date()))
+            addItem(TodoItem("1", "Сделать курсовую!!", Priority.LOW, false, Date()))
+            addItem(TodoItem("1", "Сделать курсовую!!!", Priority.NORMAL, false, Date()))
+            addItem(
+                TodoItem(
+                    "1",
+                    "Сделать курсовую!!!!",
+                    Priority.HIGH,
+                    false,
+                    Date(),
+                    deadline = Date()
+                )
+            )
+            addItem(TodoItem("1", "Сделать курсовую!!!!!", Priority.LOW, false, Date()))
+            addItem(TodoItem("1", "Сделать курсовую!!!!!!", Priority.NORMAL, false, Date()))
             addItem(TodoItem("1", "Сделать курсовую!!!!!!!", Priority.HIGH, false, Date()))
+
         }
     }
+
     fun addItem(todoItem: TodoItem) {
         val id = hashString(Date().time.toString())
         todoItem.id = id

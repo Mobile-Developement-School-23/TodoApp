@@ -21,7 +21,7 @@ class AdditionViewModel : ViewModel() {
     private var canDelete = false
 
     var id: String = "id"
-    fun setPriority(value: Int) {
+    fun setPriority(value: Priority) {
         priority.value = value
     }
 
