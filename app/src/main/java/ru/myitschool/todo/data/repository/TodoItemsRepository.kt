@@ -53,7 +53,8 @@ class TodoItemsRepository {
                     Priority.NORMAL,
                     true,
                     Date(),
-                    deadline = Date()
+                    deadline = Date(),
+                    changingDate = Date()
                 )
             )
             addItem(TodoItem("1", "Сделать курсовую!!!!", Priority.HIGH, false, Date()))
@@ -79,12 +80,12 @@ class TodoItemsRepository {
                     Priority.HIGH,
                     false,
                     Date(),
-                    deadline = Date()
+                    deadline = Date(),
                 )
             )
             addItem(TodoItem("1", "Сделать курсовую!!!!!", Priority.LOW, false, Date()))
             addItem(TodoItem("1", "Сделать курсовую!!!!!!", Priority.NORMAL, false, Date()))
-            addItem(TodoItem("1", "Сделать курсовую!!!!!!!", Priority.HIGH, false, Date()))
+            addItem(TodoItem("1", "Сделать курсовую!!!!!!!", Priority.HIGH, false, Date(),changingDate = Date()))
 
         }
     }
