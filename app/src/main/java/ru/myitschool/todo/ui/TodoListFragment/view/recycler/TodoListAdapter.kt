@@ -2,11 +2,13 @@ package ru.myitschool.todo.ui.adapters
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Paint
 import android.icu.text.SimpleDateFormat
 import android.util.TypedValue
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
