@@ -44,6 +44,7 @@ class TodoItemsRepository {
         val index = todoItems.value?.withIndex()?.find { it.value.id == todoItem.id }?.index
         if (index != null) {
             todoItems.value?.set(index, todoItem)
+            todoItems.value = todoItems.value
         }
     }
 

@@ -1,6 +1,7 @@
 package ru.myitschool.todo.ui.adapters
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Paint
 import android.icu.text.SimpleDateFormat
 import android.util.TypedValue
@@ -72,18 +73,20 @@ class TodoListAdapter(
     override fun getItemCount(): Int = todoList.size
 
     inner class TodoListHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private lateinit var todoItem:TodoItem
         private val todoText: TextView = itemView.findViewById(R.id.todo_text)
         private val todoCheckBox: CheckBox = itemView.findViewById(R.id.todo_checkbox)
         private val todoDeadline: TextView = itemView.findViewById(R.id.deadline_textview)
         private val todoPriority: ImageView = itemView.findViewById(R.id.high_priority_image)
         fun onBind(todoItem: TodoItem) {
+            this.todoItem = todoItem
             itemView.setOnClickListener {
                 selectedTodoItem.value = todoItem
             }
             if (todoItem.priority == Priority.HIGH) {
                 todoCheckBox.buttonTintList =
                     itemView.resources.getColorStateList(R.color.red, itemView.context.theme)
-                todoCheckBox.setTextAppearance(R.style.CheckBox_HighPriority)
+//                todoCheckBox.setTextAppearance(R.style.CheckBox_HighPriority)
                 todoPriority.setImageDrawable(
                     ResourcesCompat.getDrawable(
                         itemView.resources,
@@ -102,48 +105,70 @@ class TodoListAdapter(
                 )
                 todoPriority.visibility = View.VISIBLE
             }
+            else{
+                todoPriority.visibility = View.INVISIBLE
+            }
             todoText.text = todoItem.text
             todoCheckBox.setOnCheckedChangeListener { button, isChecked ->
-                run {
-                    val typedValue = TypedValue()
-                    if (isChecked) {
-                        itemView.context.theme.resolveAttribute(
-                            R.attr.inactiveColor,
-                            typedValue,
-                            true
-                        )
-                        todoText.setTextColor(typedValue.data)
-                        todoText.paintFlags = todoText.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                        checkedCounter.value = checkedCounter.value?.plus(1)
-
-                    } else {
-                        itemView.context.theme.resolveAttribute(
-                            androidx.constraintlayout.widget.R.attr.textFillColor,
-                            typedValue,
-                            true
-                        )
-                        todoText.setTextColor(typedValue.data)
-                        todoText.paintFlags =
-                            todoText.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-                        println(Paint.STRIKE_THRU_TEXT_FLAG)
-                        println(Paint.STRIKE_THRU_TEXT_FLAG.inv())
-                        checkedCounter.value = checkedCounter.value?.minus(1)
-                    }
-                    todoItem.isCompleted = isChecked
-                    viewModel.updateItem(todoItem)
-                }
+                onChangeChecked(isChecked)
             }
             todoCheckBox.isChecked = todoItem.isCompleted
+            onChangeChecked(todoItem.isCompleted)
             if (todoItem.deadline != null) {
                 todoDeadline.visibility = View.VISIBLE
                 val dateFormat = SimpleDateFormat("MMMM d", Locale.getDefault())
                 todoDeadline.text = dateFormat.format(todoItem.deadline)
             }
+            else{
+                todoDeadline.visibility = View.GONE
+            }
+        }
+        private fun onChangeChecked(isChecked:Boolean){
+            val typedValue = TypedValue()
+            val colorId:Int
+            if (isChecked) {
+                colorId = R.attr.inactiveColor
+                todoText.paintFlags = todoText.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                checkedCounter.value = checkedCounter.value?.plus(1)
+                todoCheckBox.buttonTintList = itemView.resources.getColorStateList(R.color.green, itemView.context.theme)
+
+            } else {
+                colorId = androidx.constraintlayout.widget.R.attr.textFillColor
+                todoText.paintFlags =
+                    todoText.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                checkedCounter.value = checkedCounter.value?.minus(1)
+                if (todoItem.priority == Priority.HIGH){
+                    todoCheckBox.buttonTintList = itemView.resources.getColorStateList(R.color.red, itemView.context.theme)
+                }
+                else{
+                    val colorValue = TypedValue()
+                    itemView.context.theme.resolveAttribute(
+                        R.attr.inactiveColor,
+                        colorValue,
+                        true
+                    )
+                    todoCheckBox.buttonTintList = itemView.resources.getColorStateList(colorValue.resourceId, itemView.context.theme)
+                }
+            }
+            itemView.context.theme.resolveAttribute(
+                colorId,
+                typedValue,
+                true
+            )
+            todoText.setTextColor(typedValue.data)
+            todoItem.isCompleted = isChecked
+            viewModel.updateItem(todoItem)
         }
     }
 
     override fun onItemDismiss(position: Int) {
         viewModel.deleteItem(todoList[position].id)
         notifyItemRemoved(position)
+    }
+
+    override fun onItemChecked(position: Int) {
+        todoList[position].isCompleted = !todoList[position].isCompleted
+        viewModel.updateItem(todoList[position])
+        notifyItemChanged(position)
     }
 }

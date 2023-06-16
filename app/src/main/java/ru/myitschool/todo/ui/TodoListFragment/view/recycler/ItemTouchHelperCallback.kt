@@ -23,6 +23,11 @@ class ItemTouchHelperCallback(
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-        adapter.onItemDismiss(viewHolder.adapterPosition)
+        if (direction == ItemTouchHelper.START) {
+            adapter.onItemDismiss(viewHolder.adapterPosition)
+        }
+        else{
+            adapter.onItemChecked(viewHolder.adapterPosition)
+        }
     }
 }
