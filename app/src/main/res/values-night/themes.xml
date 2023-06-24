@@ -2,15 +2,26 @@
     <!-- Base application theme. -->
     <style name="Theme.ToDo" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorPrimary">@color/blue</item>
+        <item name="colorPrimaryVariant">@color/black_primary</item>
+        <item name="colorOnPrimary">@color/black_secondary</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
+        <item name="colorSecondary">@color/blue</item>
+        <item name="colorSecondaryVariant">@color/blue</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="colorAccent">@color/beige</item>
         <!-- Customize your theme here. -->
+        <item name="windowNoTitle">true</item>
+        <item name="textFillColor">@color/white</item>
+        <item name="inactiveColor">@color/gray_inactive_dark</item>
+        <item name="separatorColor">@color/gray_sep_dark</item>
+        <item name="infoButtonColor">@color/gray_button_dark</item>
+        <item name="checkBoxInactiveColor">@color/gray_check_box</item>
+    </style>
+    <style name="ThemeOverlay.ToDo.FullscreenContainer" parent="">
+        <item name="fullscreenBackgroundColor">@color/black_primary</item>
+        <item name="fullscreenTextColor">@color/white</item>
     </style>
 </resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ToDo</string>
+    <string name="my_cases">Мои дела</string>
+    <string name="completed_d">Выполнено - %d</string>
+    <string name="add_case">Добавить дело</string>
+    <string name="close">Закрыть</string>
+    <string name="save">Сохранить</string>
+    <string name="what_to_do">Что надо делать…</string>
+    <string name="priority">Важность</string>
+    <string name="no">Нет</string>
+    <string name="make_until">Сделать до</string>
+    <string name="low">Низкий</string>
+    <string name="high"><font fgcolor="@color/red">Высокий</font></string>
+    <string name="addition_error">Текстовое поле не должно быть пустым</string>
+    <string name="delete">Удалить</string>
+    <string name="info">Информация</string>
+    <string name="blank">Пусто</string>
+</resources>
