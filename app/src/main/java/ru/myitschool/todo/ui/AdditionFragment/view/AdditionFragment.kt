@@ -8,18 +8,19 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.DatePicker
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.databinding.FragmentAdditionBinding
 import ru.myitschool.todo.ui.AdditionFragment.viewModel.AdditionViewModel
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class AdditionFragment : Fragment() {
     private var _binding: FragmentAdditionBinding? = null
@@ -45,37 +46,47 @@ class AdditionFragment : Fragment() {
             Toast.LENGTH_SHORT
         )
         viewModel = ViewModelProvider(this)[AdditionViewModel::class.java]
-        viewModel.deleted.observe(viewLifecycleOwner){
-            if (it){
-                navController.popBackStack()
-            }
-        }
-        viewModel.text.observe(viewLifecycleOwner) {
-            if (it != binding.todoEditText.text.toString()) {
-                binding.todoEditText.setText(it)
-            }
-        }
-        viewModel.priority.observe(viewLifecycleOwner) {
-            when (it) {
-                Priority.LOW -> {
-                    binding.priorityText.setText(R.string.low)
-                }
-                Priority.NORMAL -> {
-                    binding.priorityText.setText(R.string.no)
-                }
-                Priority.HIGH -> {
-                    binding.priorityText.setText(R.string.high)
+        lifecycleScope.launchWhenStarted {
+            viewModel.isDeleted.collect{
+                if (it){
+                    navController.popBackStack()
                 }
             }
         }
-        viewModel.deadlineDate.observe(viewLifecycleOwner) {
-            if (it != null) {
-                binding.deadlineSwitcher.isChecked = true
-                val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
-                binding.deadlineTextview.text = dateFormat.format(it)
-                binding.deadlineTextview.visibility = View.VISIBLE
-            } else {
-                binding.deadlineTextview.visibility = View.INVISIBLE
+        lifecycleScope.launchWhenStarted {
+            viewModel.text.collect{
+                if (it != binding.todoEditText.text.toString()) {
+                    binding.todoEditText.setText(it)
+                }
+            }
+        }
+        lifecycleScope.launchWhenStarted {
+            viewModel.priority.collect{
+                when (it) {
+                    Priority.LOW -> {
+                        binding.priorityText.setText(R.string.low)
+                    }
+
+                    Priority.NORMAL -> {
+                        binding.priorityText.setText(R.string.no)
+                    }
+
+                    Priority.HIGH -> {
+                        binding.priorityText.setText(R.string.high)
+                    }
+                }
+            }
+        }
+        lifecycleScope.launchWhenStarted {
+            viewModel.deadlineDate.collect{
+                if (it != null) {
+                    binding.deadlineSwitcher.isChecked = true
+                    val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
+                    binding.deadlineTextview.text = dateFormat.format(it)
+                    binding.deadlineTextview.visibility = View.VISIBLE
+                } else {
+                    binding.deadlineTextview.visibility = View.INVISIBLE
+                }
             }
         }
         binding.todoEditText.addTextChangedListener(object : TextWatcher {

@@ -1,73 +1,78 @@
 package ru.myitschool.todo.ui.AdditionFragment.viewModel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.repository.TodoItemsRepository
-import java.util.*
+import java.util.Date
 
 class AdditionViewModel : ViewModel() {
-    val priority = MutableLiveData(Priority.NORMAL)
-    val text = MutableLiveData("")
-    val deadlineDate = MutableLiveData<Date?>()
-    val deleted = MutableLiveData<Boolean>()
-    private var isCompleted: Boolean? = null
-    private var creationDate: Date? = null
-    private val repository = TodoItemsRepository()
+    private val _priority = MutableStateFlow(Priority.NORMAL)
+    private val _text = MutableStateFlow("")
+    private val _deadlineDate = MutableStateFlow<Date?>(null)
+    private val _isDeleted = MutableStateFlow(false)
+    val priority: StateFlow<Priority> get() = _priority
+    val text: StateFlow<String> get() = _text
+    val deadlineDate: StateFlow<Date?> get() = _deadlineDate
+    val isDeleted: StateFlow<Boolean> get() = _isDeleted
+    private var loadedTodoItem: TodoItem? = null
+    private val repository = TodoItemsRepository
     private var canDelete = false
 
     var id: String = "id"
     fun setPriority(value: Priority) {
-        priority.value = value
+        _priority.value = value
     }
 
     fun setText(value: String) {
-        text.value = value
+        _text.value = value
     }
 
     fun setDeadline(value: Date?) {
-        deadlineDate.value = value
+        _deadlineDate.value = value
     }
 
     fun saveCase() {
-        val todoItem = TodoItem(
+        val todoItem = loadedTodoItem?.copy(
+            text = text.value,
+            priority = priority.value,
+            deadline = deadlineDate.value
+        ) ?: TodoItem(
             id = id,
-            text = text.value!!,
-            priority = priority.value!!,
-            isCompleted = if (isCompleted != null) isCompleted!! else false,
-            creationDate = if (creationDate != null) creationDate!! else Date(),
-            deadline = if (deadlineDate.value != null) deadlineDate.value else null
+            text = text.value,
+            priority = priority.value,
+            isCompleted = false,
+            creationDate = Date(),
+            deadline = deadlineDate.value
         )
         if (id == "id") {
             repository.addItem(todoItem)
         } else {
-            repository.updateItem(todoItem)
+            repository.updateItem(todoItem, true)
         }
 
     }
 
     fun loadTodoItem(id: String) {
         canDelete = true
-        val todoItem = repository.getItemById(id)
         viewModelScope.launch {
-            todoItem.collect{
-                text.value = it?.text
-                deadlineDate.value = it?.deadline
-                priority.value = it?.priority
-                isCompleted = it?.isCompleted
-                creationDate = it?.creationDate
-            }
+            val todoItem = repository.getItemById(id)
+            _text.value = todoItem?.text ?: ""
+            _deadlineDate.value = todoItem?.deadline
+            _priority.value = todoItem?.priority ?: Priority.NORMAL
+            loadedTodoItem = todoItem
         }
         this.id = id
     }
-    fun deleteTodoItem(){
-        if (canDelete){
+
+    fun deleteTodoItem() {
+        if (canDelete) {
             repository.deleteItem(id)
-            deleted.value = true
+            _isDeleted.value = true
         }
     }
 }

@@ -1,41 +1,32 @@
 package ru.myitschool.todo.ui.adapters
 
-import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.Paint
 import android.icu.text.SimpleDateFormat
 import android.util.TypedValue
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.core.content.res.ResourcesCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.domain.CommonCallbackImpl
-import ru.myitschool.todo.repository.TodoItemsRepository
-import ru.myitschool.todo.ui.TodoListFragment.viewModel.TodoListViewModel
 import ru.myitschool.todo.ui.TodoListFragment.view.recycler.ItemTouchHelperAdapter
 import java.util.*
 
 
 class TodoListAdapter(
-    private val viewModel:TodoListViewModel
+    private val itemChanger: ItemChanger,
+    private val selectedCallback: SelectedCallback,
+    private val counterCallback: CounterCallback
 ) : RecyclerView.Adapter<TodoListAdapter.TodoListHolder>(), ItemTouchHelperAdapter {
-    var todoList = mutableListOf<TodoItem>()
+    var todoList = listOf<TodoItem>()
         set(value) {
             var counter = 0
             for (i in value) {
@@ -46,17 +37,18 @@ class TodoListAdapter(
             val callback = CommonCallbackImpl(
                 oldItems = field,
                 newItems = value,
-                areItemsTheSameImpl = {oldItem, newItem ->  oldItem.id == newItem.id},
-                areContentsTeSameImpl = {oldItem, newItem ->  oldItem.deadline == newItem.deadline && oldItem.text == newItem.text &&
-                        oldItem.priority == newItem.priority}
+                areItemsTheSameImpl = { oldItem, newItem -> oldItem.id == newItem.id },
+                areContentsTeSameImpl = { oldItem, newItem ->
+                    oldItem.deadline == newItem.deadline && oldItem.text == newItem.text &&
+                            oldItem.priority == newItem.priority && oldItem.isCompleted == newItem.isCompleted
+                }
             )
-            checkedCounter.value = counter
-            field = value
+            counterCallback.onCount(counter)
+            field = value.toMutableList()
             val diffResult = DiffUtil.calculateDiff(callback)
             diffResult.dispatchUpdatesTo(this)
         }
-    var checkedCounter = MutableLiveData(0)
-    val selectedTodoItem = MutableLiveData<TodoItem>()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoListHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         return TodoListHolder(
@@ -73,9 +65,17 @@ class TodoListAdapter(
     }
 
     override fun getItemCount(): Int = todoList.size
+    override fun onItemDismiss(position: Int) {
+        itemChanger.deleteItem(todoList[position].id)
+    }
+
+    override fun onItemChecked(position: Int) {
+        val todoItem = todoList[position].copy(isCompleted = !todoList[position].isCompleted)
+        itemChanger.updateItem(todoItem, false)
+    }
 
     inner class TodoListHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private lateinit var todoItem:TodoItem
+        private lateinit var todoItem: TodoItem
         private val todoText: TextView = itemView.findViewById(R.id.todo_text)
         private val todoCheckBox: CheckBox = itemView.findViewById(R.id.todo_checkbox)
         private val todoDeadline: TextView = itemView.findViewById(R.id.deadline_textview)
@@ -83,12 +83,11 @@ class TodoListAdapter(
         fun onBind(todoItem: TodoItem) {
             this.todoItem = todoItem
             itemView.setOnClickListener {
-                selectedTodoItem.value = todoItem
+                selectedCallback.onSelect(todoItem)
             }
             if (todoItem.priority == Priority.HIGH) {
                 todoCheckBox.buttonTintList =
                     itemView.resources.getColorStateList(R.color.red, itemView.context.theme)
-//                todoCheckBox.setTextAppearance(R.style.CheckBox_HighPriority)
                 todoPriority.setImageDrawable(
                     ResourcesCompat.getDrawable(
                         itemView.resources,
@@ -106,8 +105,7 @@ class TodoListAdapter(
                     )
                 )
                 todoPriority.visibility = View.VISIBLE
-            }
-            else{
+            } else {
                 todoPriority.visibility = View.INVISIBLE
             }
             todoText.text = todoItem.text
@@ -120,36 +118,38 @@ class TodoListAdapter(
                 todoDeadline.visibility = View.VISIBLE
                 val dateFormat = SimpleDateFormat("MMMM d", Locale.getDefault())
                 todoDeadline.text = dateFormat.format(todoItem.deadline)
-            }
-            else{
+            } else {
                 todoDeadline.visibility = View.GONE
             }
         }
-        private fun onChangeChecked(isChecked:Boolean){
+
+        private fun onChangeChecked(isChecked: Boolean) {
             val typedValue = TypedValue()
-            val colorId:Int
+            val colorId: Int
             if (isChecked) {
                 colorId = R.attr.inactiveColor
                 todoText.paintFlags = todoText.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                checkedCounter.value = checkedCounter.value?.plus(1)
-                todoCheckBox.buttonTintList = itemView.resources.getColorStateList(R.color.green, itemView.context.theme)
+                todoCheckBox.buttonTintList =
+                    itemView.resources.getColorStateList(R.color.green, itemView.context.theme)
 
             } else {
                 colorId = androidx.constraintlayout.widget.R.attr.textFillColor
                 todoText.paintFlags =
                     todoText.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-                checkedCounter.value = checkedCounter.value?.minus(1)
-                if (todoItem.priority == Priority.HIGH){
-                    todoCheckBox.buttonTintList = itemView.resources.getColorStateList(R.color.red, itemView.context.theme)
-                }
-                else{
+                if (todoItem.priority == Priority.HIGH) {
+                    todoCheckBox.buttonTintList =
+                        itemView.resources.getColorStateList(R.color.red, itemView.context.theme)
+                } else {
                     val colorValue = TypedValue()
                     itemView.context.theme.resolveAttribute(
                         R.attr.inactiveColor,
                         colorValue,
                         true
                     )
-                    todoCheckBox.buttonTintList = itemView.resources.getColorStateList(colorValue.resourceId, itemView.context.theme)
+                    todoCheckBox.buttonTintList = itemView.resources.getColorStateList(
+                        colorValue.resourceId,
+                        itemView.context.theme
+                    )
                 }
             }
             itemView.context.theme.resolveAttribute(
@@ -158,19 +158,18 @@ class TodoListAdapter(
                 true
             )
             todoText.setTextColor(typedValue.data)
-            todoItem.isCompleted = isChecked
-            viewModel.updateItem(todoItem)
+            itemChanger.updateItem(todoItem.copy(isCompleted = isChecked), false)
         }
     }
+}
 
-    override fun onItemDismiss(position: Int) {
-        viewModel.deleteItem(todoList[position].id)
-        notifyItemRemoved(position)
-    }
-
-    override fun onItemChecked(position: Int) {
-        todoList[position].isCompleted = !todoList[position].isCompleted
-        viewModel.updateItem(todoList[position])
-        notifyItemChanged(position)
-    }
+interface ItemChanger {
+    fun updateItem(todoItem: TodoItem, toTop: Boolean)
+    fun deleteItem(id: String)
+}
+interface SelectedCallback{
+    fun onSelect(todoItem: TodoItem)
+}
+interface CounterCallback{
+    fun onCount(count:Int)
 }

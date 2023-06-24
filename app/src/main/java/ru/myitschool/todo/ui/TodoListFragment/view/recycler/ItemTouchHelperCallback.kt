@@ -51,22 +51,22 @@ class ItemTouchHelperCallback(
         }
         if (dX > 0) {
             val paint = Paint()
-            paint.color = Color.parseColor("#00FF00")
+            paint.color = view.resources.getColor(R.color.green, view.context.theme)
             c.drawRect(view.left.toFloat(), view.top.toFloat(), dX, view.bottom.toFloat(), paint)
             val drawable = ResourcesCompat.getDrawable(
                 view.resources,
                 R.drawable.ic_check, view.context.theme
             )
             drawable?.setBounds(
-                min(view.left+view.height / 3, (view.left + dX).toInt()),
+                min(view.left+view.height / 3, (view.left+dX-view.height / 3).toInt()),
                 view.top + view.height / 3,
-                view.left+view.height / 3 * 2,
+                min(view.left+view.height / 3 * 2, (view.left+dX).toInt()),
                 view.bottom - view.height / 3
             )
             drawable?.draw(c)
         } else if (dX < 0) {
             val paint = Paint()
-            paint.color = Color.parseColor("#FF0000")
+            paint.color = view.resources.getColor(R.color.red, view.context.theme)
             c.drawRect(
                 view.right + dX, view.top.toFloat(),
                 view.right.toFloat(), view.bottom.toFloat(), paint
@@ -78,12 +78,11 @@ class ItemTouchHelperCallback(
             drawable?.setBounds(
                 max(view.right - view.height / 3 * 2, (view.right + dX).toInt()),
                 view.top + view.height / 3,
-                view.right - view.height / 3,
+                max(view.right - view.height / 3, (view.right+dX+view.height / 3).toInt()),
                 view.bottom - view.height / 3
             )
             drawable?.draw(c)
         }
-//        drawable?.draw(c)
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }
 }

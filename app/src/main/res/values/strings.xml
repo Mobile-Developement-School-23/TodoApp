@@ -15,4 +15,7 @@
     <string name="delete">Delete</string>
     <string name="info">Info</string>
     <string name="blank">Blank</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="system">System</string>
 </resources>

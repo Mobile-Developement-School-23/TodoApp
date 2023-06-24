@@ -16,4 +16,7 @@
     <string name="delete">Удалить</string>
     <string name="info">Информация</string>
     <string name="blank">Пусто</string>
+    <string name="light">Светлая</string>
+    <string name="dark">Темная</string>
+    <string name="system">Системная</string>
 </resources>

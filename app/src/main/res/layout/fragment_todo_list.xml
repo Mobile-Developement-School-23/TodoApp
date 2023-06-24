@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="?attr/fullscreenBackgroundColor"
+    android:fitsSystemWindows="true"
     android:theme="@style/ThemeOverlay.ToDo.FullscreenContainer"
     tools:context=".ui.TodoListFragment.view.TodoListFragment">
 
@@ -16,52 +16,73 @@
         android:background="?attr/fullscreenBackgroundColor"
         android:fitsSystemWindows="true"
         app:elevation="0dp">
+
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_scrollFlags="scroll|snap"
             android:fitsSystemWindows="true"
-            android:layout_marginStart="24dp">
+            app:expandedTitleMarginStart="24dp"
+            app:layout_scrollFlags="scroll"
+            app:toolbarId="@id/collapsed_toolbar">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/collapsed_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="parallax"
+                app:title="@string/my_cases" />
 
             <TextView
                 android:id="@+id/completed_textview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
                 android:layout_marginTop="120dp"
                 android:text="@string/completed_d"
+                app:layout_collapseMode="parallax"
                 app:layout_constraintStart_toStartOf="@+id/textView"
                 app:layout_constraintTop_toBottomOf="@+id/textView" />
             <TextView
-                android:id="@+id/textView"
-                app:layout_collapseMode="parallax"
+                android:id="@+id/filter_textview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/my_cases"
-                android:layout_marginTop="60dp"
+                android:layout_marginEnd="24dp"
+                android:textSize="16sp"
+                app:layout_collapseMode="parallax"
                 android:textColor="?attr/textFillColor"
-                android:textSize="32sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.191"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:text="Filter"
+                android:drawableTint="?attr/textFillColor"
+                android:layout_gravity="bottom|end"
+                app:drawableEndCompat="@drawable/ic_filter_list" />
+            <ImageView
+                android:id="@+id/settings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:padding="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginTop="10dp"
+                android:background="?android:selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_settings"
+                app:tint="?attr/textFillColor" />
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:id="@+id/empty_info"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintVertical_bias="0.3"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.3">
 
             <ImageView
                 android:id="@+id/empty_image"
@@ -101,7 +122,9 @@
                 android:background="@drawable/todo_list_background"
                 android:elevation="2dp"
                 android:orientation="vertical"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:itemCount="5"
+                tools:listitem="@layout/todo_item" />
         </LinearLayout>
 
         <View
@@ -110,29 +133,17 @@
             android:layout_height="1dp"
             android:layout_marginBottom="10dp"
             app:layout_constraintBottom_toBottomOf="parent" />
+
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="0dp"
+            android:layout_height="?attr/actionBarSize"
             android:background="?attr/fullscreenBackgroundColor"
-            android:layout_height="wrap_content"
             android:elevation="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-            <TextView
-                android:id="@+id/title"
-                app:layout_collapseMode="parallax"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/my_cases"
-                android:textColor="?attr/textFillColor"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.191"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.appcompat.widget.Toolbar>
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="@string/my_cases" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
