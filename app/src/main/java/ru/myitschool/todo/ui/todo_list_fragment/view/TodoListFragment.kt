@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.TodoListFragment.view
+package ru.myitschool.todo.ui.todo_list_fragment.view
 
 import android.animation.ObjectAnimator
 import android.os.Bundle
@@ -6,9 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
-import android.view.animation.AnimationUtils
-import android.view.animation.BounceInterpolator
-import android.view.animation.Interpolator
 import android.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -16,11 +13,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
+import kotlinx.coroutines.launch
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.databinding.FragmentTodoListBinding
-import ru.myitschool.todo.ui.TodoListFragment.view.recycler.ItemTouchHelperCallback
-import ru.myitschool.todo.ui.TodoListFragment.viewModel.TodoListViewModel
+import ru.myitschool.todo.ui.todo_list_fragment.view.recycler.ItemTouchHelperCallback
+import ru.myitschool.todo.ui.todo_list_fragment.view_model.TodoListViewModel
 import ru.myitschool.todo.ui.adapters.CounterCallback
 import ru.myitschool.todo.ui.adapters.SelectedCallback
 import ru.myitschool.todo.ui.adapters.TodoListAdapter
@@ -85,10 +83,10 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             animateFAB(oldScrollY)
         }
         touchHelper.attachToRecyclerView(binding.todoList)
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch {
             viewModel.todoItems.collect {
                 if (!binding.todoList.isComputingLayout) {
-                    if (it.isEmpty()) {
+                    if (it.isEmpty() && viewModel.isLoaded) {
                         binding.emptyInfo.visibility = View.VISIBLE
                     } else {
                         binding.emptyInfo.visibility = View.GONE
@@ -103,7 +101,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         }
 
         //Подписывание на обновления
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch {
             viewModel.isExpanded.collect {
                 if (!scrolled) {
                     binding.appBar.setExpanded(it)
@@ -111,7 +109,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                 }
             }
         }
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch{
             viewModel.filterValue.collect {
                 var text: Int = R.string.no
                 when (it) {

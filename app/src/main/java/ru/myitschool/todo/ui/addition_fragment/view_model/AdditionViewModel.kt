@@ -1,16 +1,17 @@
-package ru.myitschool.todo.ui.AdditionFragment.viewModel
+package ru.myitschool.todo.ui.addition_fragment.view_model
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
-import ru.myitschool.todo.repository.TodoItemsRepository
+import ru.myitschool.todo.data.repository.TodoItemsRepository
 import java.util.Date
 
-class AdditionViewModel : ViewModel() {
+class AdditionViewModel(application: Application) : AndroidViewModel(application) {
     private val _priority = MutableStateFlow(Priority.NORMAL)
     private val _text = MutableStateFlow("")
     private val _deadlineDate = MutableStateFlow<Date?>(null)
@@ -20,7 +21,7 @@ class AdditionViewModel : ViewModel() {
     val deadlineDate: StateFlow<Date?> get() = _deadlineDate
     val isDeleted: StateFlow<Boolean> get() = _isDeleted
     private var loadedTodoItem: TodoItem? = null
-    private val repository = TodoItemsRepository
+    private val repository = TodoItemsRepository(application)
     private var canDelete = false
 
     var id: String = "id"
@@ -49,12 +50,13 @@ class AdditionViewModel : ViewModel() {
             creationDate = Date(),
             deadline = deadlineDate.value
         )
-        if (id == "id") {
-            repository.addItem(todoItem)
-        } else {
-            repository.updateItem(todoItem, true)
+        viewModelScope.launch {
+            if (id == "id") {
+                repository.addItem(todoItem)
+            } else {
+                repository.updateItem(todoItem, true)
+            }
         }
-
     }
 
     fun loadTodoItem(id: String) {
@@ -71,8 +73,10 @@ class AdditionViewModel : ViewModel() {
 
     fun deleteTodoItem() {
         if (canDelete) {
-            repository.deleteItem(id)
-            _isDeleted.value = true
+            viewModelScope.launch {
+                repository.deleteItem(id)
+                _isDeleted.value = true
+            }
         }
     }
 }

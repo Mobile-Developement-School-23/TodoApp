@@ -7,7 +7,7 @@
     android:background="?attr/fullscreenBackgroundColor"
     android:fitsSystemWindows="true"
     android:theme="@style/ThemeOverlay.ToDo.FullscreenContainer"
-    tools:context=".ui.TodoListFragment.view.TodoListFragment">
+    tools:context=".ui.todo_list_fragment.view.TodoListFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
@@ -78,6 +78,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

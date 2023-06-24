@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="?attr/fullscreenBackgroundColor"
     android:theme="@style/ThemeOverlay.ToDo.FullscreenContainer"
-    tools:context=".ui.AdditionFragment.view.AdditionFragment">
+    tools:context=".ui.addition_fragment.view.AdditionFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"

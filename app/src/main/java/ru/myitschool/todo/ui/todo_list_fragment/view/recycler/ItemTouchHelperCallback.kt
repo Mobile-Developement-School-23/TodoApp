@@ -1,9 +1,7 @@
-package ru.myitschool.todo.ui.TodoListFragment.view.recycler
+package ru.myitschool.todo.ui.todo_list_fragment.view.recycler
 
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView

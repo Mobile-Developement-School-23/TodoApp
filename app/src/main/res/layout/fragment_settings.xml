@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="?attr/fullscreenBackgroundColor"
     android:theme="@style/ThemeOverlay.ToDo.FullscreenContainer"
-    tools:context=".ui.SettingsFragment.view.SettingsFragment">
+    tools:context=".ui.settings_fragment.view.SettingsFragment">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar2"

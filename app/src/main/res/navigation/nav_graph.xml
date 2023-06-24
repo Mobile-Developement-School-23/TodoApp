@@ -7,12 +7,12 @@
 
     <fragment
         android:id="@+id/additionFragment"
-        android:name="ru.myitschool.todo.ui.AdditionFragment.view.AdditionFragment"
+        android:name="ru.myitschool.todo.ui.addition_fragment.view.AdditionFragment"
         android:label="fragment_addition"
         tools:layout="@layout/fragment_addition" />
     <fragment
         android:id="@+id/todoListFragment"
-        android:name="ru.myitschool.todo.ui.TodoListFragment.view.TodoListFragment"
+        android:name="ru.myitschool.todo.ui.todo_list_fragment.view.TodoListFragment"
         android:label="fragment_todo_list"
         tools:layout="@layout/fragment_todo_list" >
         <action
@@ -28,7 +28,7 @@
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="ru.myitschool.todo.ui.SettingsFragment.view.SettingsFragment"
+        android:name="ru.myitschool.todo.ui.settings_fragment.view.SettingsFragment"
         android:label="fragment_settings"
         tools:layout="@layout/fragment_settings" />
 </navigation>

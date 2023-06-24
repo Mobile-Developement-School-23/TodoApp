@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.AdditionFragment.view
+package ru.myitschool.todo.ui.addition_fragment.view
 
 import android.app.DatePickerDialog
 import android.icu.text.SimpleDateFormat
@@ -13,12 +13,14 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.withStarted
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import kotlinx.coroutines.launch
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.databinding.FragmentAdditionBinding
-import ru.myitschool.todo.ui.AdditionFragment.viewModel.AdditionViewModel
+import ru.myitschool.todo.ui.addition_fragment.view_model.AdditionViewModel
 import java.util.Date
 import java.util.Locale
 
@@ -46,21 +48,21 @@ class AdditionFragment : Fragment() {
             Toast.LENGTH_SHORT
         )
         viewModel = ViewModelProvider(this)[AdditionViewModel::class.java]
-        lifecycleScope.launchWhenStarted {
-            viewModel.isDeleted.collect{
-                if (it){
+        lifecycleScope.launch {
+            viewModel.isDeleted.collect {
+                if (it) {
                     navController.popBackStack()
                 }
             }
         }
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch {
             viewModel.text.collect{
                 if (it != binding.todoEditText.text.toString()) {
                     binding.todoEditText.setText(it)
                 }
             }
         }
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch{
             viewModel.priority.collect{
                 when (it) {
                     Priority.LOW -> {
@@ -77,7 +79,7 @@ class AdditionFragment : Fragment() {
                 }
             }
         }
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch {
             viewModel.deadlineDate.collect{
                 if (it != null) {
                     binding.deadlineSwitcher.isChecked = true

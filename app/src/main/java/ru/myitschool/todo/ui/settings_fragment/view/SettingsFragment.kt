@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.SettingsFragment.view
+package ru.myitschool.todo.ui.settings_fragment.view
 
 import android.content.Context
 import android.content.SharedPreferences

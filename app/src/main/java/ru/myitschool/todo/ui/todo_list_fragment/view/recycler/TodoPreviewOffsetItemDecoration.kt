@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.TodoListFragment.view.recycler
+package ru.myitschool.todo.ui.todo_list_fragment.view.recycler
 
 import android.graphics.Rect
 import android.view.View

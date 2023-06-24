@@ -10,14 +10,13 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
-import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.domain.CommonCallbackImpl
-import ru.myitschool.todo.ui.TodoListFragment.view.recycler.ItemTouchHelperAdapter
+import ru.myitschool.todo.ui.todo_list_fragment.view.recycler.ItemTouchHelperAdapter
 import java.util.*
 
 
