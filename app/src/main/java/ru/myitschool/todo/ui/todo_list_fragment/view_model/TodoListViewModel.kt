@@ -1,11 +1,16 @@
 package ru.myitschool.todo.ui.todo_list_fragment.view_model
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import ru.myitschool.todo.data.data_sources.network.data_mappers.TodoNetworkMapper
+import ru.myitschool.todo.data.data_sources.network.entities.TodoItemListResponse
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.data.repository.TodoItemsRepository
@@ -21,22 +26,24 @@ class TodoListViewModel(application: Application) : AndroidViewModel(application
 
     private val repository: TodoItemsRepository = TodoItemsRepository(application)
 
-    private val _todoItems: MutableStateFlow<List<TodoItem>> =
-        MutableStateFlow(listOf())
-    val todoItems: StateFlow<List<TodoItem>> get() = _todoItems
+    private val _todoItems: MutableStateFlow<List<TodoItem>?> =
+        MutableStateFlow(null)
+    val todoItems: StateFlow<List<TodoItem>?> get() = _todoItems
 
     private val _isExpanded = MutableStateFlow(true)
     val isExpanded: StateFlow<Boolean> get() = _isExpanded
-    var isLoaded = false
+    private val _loadedError = MutableStateFlow(false)
+    val loadedError: StateFlow<Boolean> get() = _loadedError
+
 
 
     init {
         viewModelScope.launch {
             repository.todoItems.collect {
                 setFilterValue(filterValue.value)
-                isLoaded = true
             }
         }
+        reloadData()
     }
 
     fun getItemsByPriority(priority: Priority) {
@@ -57,7 +64,6 @@ class TodoListViewModel(application: Application) : AndroidViewModel(application
 
     fun setFilterValue(value: Int) {
         _filterValue.value = value
-        println(value)
         when (value) {
             NONE -> {
                 getItems()
@@ -67,6 +73,18 @@ class TodoListViewModel(application: Application) : AndroidViewModel(application
             }
             LOW -> {
                 getItemsByPriority(Priority.LOW)
+            }
+        }
+    }
+    fun reloadData(callback:(error:Int)->Unit = {}) {
+        viewModelScope.launch {
+            repository.loadAllItems{
+                if (it){
+                    callback(0)
+                }
+                else{
+                    callback(1)
+                }
             }
         }
     }

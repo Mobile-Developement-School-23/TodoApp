@@ -47,7 +47,9 @@ class TodoListAdapter(
             val diffResult = DiffUtil.calculateDiff(callback)
             diffResult.dispatchUpdatesTo(this)
         }
-
+    init {
+        counterCallback.onCount(0)
+    }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoListHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         return TodoListHolder(
@@ -73,42 +75,59 @@ class TodoListAdapter(
         itemChanger.updateItem(todoItem, false)
     }
 
+    override fun onItemSelected(actionState:Int) {
+        if (actionState == 1) {
+            selectedCallback.onSwipeStart()
+        }
+        else{
+            selectedCallback.onSwipeFinish()
+        }
+    }
+
     inner class TodoListHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private lateinit var todoItem: TodoItem
         private val todoText: TextView = itemView.findViewById(R.id.todo_text)
         private val todoCheckBox: CheckBox = itemView.findViewById(R.id.todo_checkbox)
         private val todoDeadline: TextView = itemView.findViewById(R.id.deadline_textview)
         private val todoPriority: ImageView = itemView.findViewById(R.id.high_priority_image)
+        private var isLoaded = false
         fun onBind(todoItem: TodoItem) {
+            isLoaded = false
             this.todoItem = todoItem
             itemView.setOnClickListener {
                 selectedCallback.onSelect(todoItem)
             }
-            if (todoItem.priority == Priority.HIGH) {
-                todoCheckBox.buttonTintList =
-                    itemView.resources.getColorStateList(R.color.red, itemView.context.theme)
-                todoPriority.setImageDrawable(
-                    ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.drawable.ic_critical,
-                        itemView.context.theme
+            when(todoItem.priority) {
+                Priority.HIGH -> {
+                    todoCheckBox.buttonTintList =
+                        itemView.resources.getColorStateList(R.color.red, itemView.context.theme)
+                    todoPriority.setImageDrawable(
+                        ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.drawable.ic_critical,
+                            itemView.context.theme
+                        )
                     )
-                )
-                todoPriority.visibility = View.VISIBLE
-            } else if (todoItem.priority == Priority.LOW) {
-                todoPriority.setImageDrawable(
-                    ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.drawable.ic_arrow_down,
-                        itemView.context.theme
+                    todoPriority.visibility = View.VISIBLE
+                }
+
+                Priority.LOW -> {
+                    todoPriority.setImageDrawable(
+                        ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.drawable.ic_arrow_down,
+                            itemView.context.theme
+                        )
                     )
-                )
-                todoPriority.visibility = View.VISIBLE
-            } else {
-                todoPriority.visibility = View.INVISIBLE
+                    todoPriority.visibility = View.VISIBLE
+                }
+
+                else -> {
+                    todoPriority.visibility = View.INVISIBLE
+                }
             }
             todoText.text = todoItem.text
-            todoCheckBox.setOnCheckedChangeListener { button, isChecked ->
+            todoCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 onChangeChecked(isChecked)
             }
             todoCheckBox.isChecked = todoItem.isCompleted
@@ -120,6 +139,7 @@ class TodoListAdapter(
             } else {
                 todoDeadline.visibility = View.GONE
             }
+            isLoaded = true
         }
 
         private fun onChangeChecked(isChecked: Boolean) {
@@ -157,17 +177,20 @@ class TodoListAdapter(
                 true
             )
             todoText.setTextColor(typedValue.data)
-            itemChanger.updateItem(todoItem.copy(isCompleted = isChecked), false)
+            if (isLoaded) {
+                itemChanger.updateItem(todoItem.copy(isCompleted = isChecked), false)
+            }
         }
     }
 }
-
 interface ItemChanger {
     fun updateItem(todoItem: TodoItem, toTop: Boolean)
     fun deleteItem(id: String)
 }
 interface SelectedCallback{
     fun onSelect(todoItem: TodoItem)
+    fun onSwipeStart()
+    fun onSwipeFinish()
 }
 interface CounterCallback{
     fun onCount(count:Int)

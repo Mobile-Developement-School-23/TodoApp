@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.PopupMenu
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -17,24 +17,24 @@ import kotlinx.coroutines.launch
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.databinding.FragmentTodoListBinding
-import ru.myitschool.todo.ui.todo_list_fragment.view.recycler.ItemTouchHelperCallback
-import ru.myitschool.todo.ui.todo_list_fragment.view_model.TodoListViewModel
 import ru.myitschool.todo.ui.adapters.CounterCallback
 import ru.myitschool.todo.ui.adapters.SelectedCallback
 import ru.myitschool.todo.ui.adapters.TodoListAdapter
+import ru.myitschool.todo.ui.todo_list_fragment.view.recycler.ItemTouchHelperCallback
+import ru.myitschool.todo.ui.todo_list_fragment.view_model.TodoListViewModel
 
 
 class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
 
     private var _binding: FragmentTodoListBinding? = null
     private val binding get() = _binding!!
-    private lateinit var adapter: TodoListAdapter
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
     private var scrolled: Boolean = false
-    private val viewModel: TodoListViewModel by lazy {
-        ViewModelProvider(this)[TodoListViewModel::class.java]
+    private val viewModel: TodoListViewModel by viewModels()
+    private val adapter: TodoListAdapter by lazy {
+        TodoListAdapter(viewModel, this, this)
     }
     private var isHidden = false
     private var fabPosition: Float = 0F
@@ -51,7 +51,6 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        var lastOffset = 0
         binding.settings.setOnClickListener {
             navController.navigate(R.id.action_todoListFragment_to_settingsFragment)
         }
@@ -64,34 +63,44 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                 viewModel.setExpanded(true)
                 closeToolBar()
             }
-            lastOffset = verticalOffset
         }
+
+        binding.swipeRefresh.setColorSchemeResources(R.color.blue)
 
         binding.filterTextview.setOnClickListener {
             showPopupMenu(it)
         }
-
+        binding.swipeRefresh.setOnRefreshListener {
+            lifecycleScope.launch {
+                requestUpdateData()
+            }
+        }
+        binding.swipeRefresh.setOnChildScrollUpCallback { _, _ ->
+            binding.appBar
+            false
+        }
 
         // Настройка recyclerview
-        adapter = TodoListAdapter(viewModel, this, this)
         val callback = ItemTouchHelperCallback(adapter)
         val touchHelper = ItemTouchHelper(callback)
         binding.todoList.setItemViewCacheSize(adapter.itemCount)
         binding.todoList.adapter = adapter
         binding.todoList.itemAnimator?.removeDuration = 0
-        binding.todoList.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+        binding.todoList.setOnScrollChangeListener { _, _, _, _, oldScrollY ->
             animateFAB(oldScrollY)
         }
         touchHelper.attachToRecyclerView(binding.todoList)
         lifecycleScope.launch {
             viewModel.todoItems.collect {
-                if (!binding.todoList.isComputingLayout) {
-                    if (it.isEmpty() && viewModel.isLoaded) {
-                        binding.emptyInfo.visibility = View.VISIBLE
-                    } else {
-                        binding.emptyInfo.visibility = View.GONE
+                if (it != null && _binding != null) {
+                    if (!binding.todoList.isComputingLayout) {
+                        if (it.isEmpty()) {
+                            binding.emptyInfo.visibility = View.VISIBLE
+                        } else {
+                            binding.emptyInfo.visibility = View.GONE
+                        }
+                        adapter.todoList = it
                     }
-                    adapter.todoList = it
                 }
             }
         }
@@ -109,7 +118,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                 }
             }
         }
-        lifecycleScope.launch{
+        lifecycleScope.launch {
             viewModel.filterValue.collect {
                 var text: Int = R.string.no
                 when (it) {
@@ -128,6 +137,21 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                 binding.filterTextview.setText(text)
             }
         }
+        lifecycleScope.launch {
+            viewModel.loadedError.collect {
+                if (it && _binding != null) {
+                    binding.errorLayout.visibility = View.VISIBLE
+                }
+            }
+        }
+        binding.retryButton.setOnClickListener {
+            requestUpdateData()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        binding.swipeRefresh.isRefreshing = false
     }
 
     override fun onDestroyView() {
@@ -150,6 +174,14 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         val data = Bundle()
         data.putString("id", todoItem.id)
         navController.navigate(R.id.action_todoListFragment_to_additionFragment, data)
+    }
+
+    override fun onSwipeStart() {
+        binding.swipeRefresh.isEnabled = false
+    }
+
+    override fun onSwipeFinish() {
+        binding.swipeRefresh.isEnabled = true
     }
 
     override fun onCount(count: Int) {
@@ -182,7 +214,8 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         }
         popupMenu.show()
     }
-    private fun animateFAB(oldScrollY:Int){
+
+    private fun animateFAB(oldScrollY: Int) {
         if (oldScrollY < 0 && !isHidden) {
             val animator = ObjectAnimator.ofFloat(
                 binding.addCase,
@@ -192,7 +225,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             animator.duration = 500
             isHidden = true
             animator.start()
-        } else if (oldScrollY > 0 && isHidden){
+        } else if (oldScrollY > 0 && isHidden) {
             val animator = ObjectAnimator.ofFloat(
                 binding.addCase,
                 "translationY", binding.root.height.toFloat(), fabPosition - 100, fabPosition
@@ -201,6 +234,21 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             animator.interpolator = AccelerateInterpolator()
             animator.duration = 500
             animator.start()
+        }
+    }
+
+    private fun requestUpdateData() {
+        lifecycleScope.launch {
+            viewModel.reloadData { error ->
+                if (_binding != null) {
+                    binding.swipeRefresh.isRefreshing = false
+                    if (error == 1) {
+                        binding.errorLayout.visibility = View.VISIBLE
+                    } else {
+                        binding.errorLayout.visibility = View.GONE
+                    }
+                }
+            }
         }
     }
 }

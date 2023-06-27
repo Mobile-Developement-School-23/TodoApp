@@ -1,6 +1,7 @@
 package ru.myitschool.todo.ui.addition_fragment.view_model
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,7 +10,9 @@ import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.data.repository.TodoItemsRepository
+import java.security.MessageDigest
 import java.util.Date
+import kotlin.random.Random
 
 class AdditionViewModel(application: Application) : AndroidViewModel(application) {
     private val _priority = MutableStateFlow(Priority.NORMAL)
@@ -23,6 +26,9 @@ class AdditionViewModel(application: Application) : AndroidViewModel(application
     private var loadedTodoItem: TodoItem? = null
     private val repository = TodoItemsRepository(application)
     private var canDelete = false
+    private var saved = false
+
+    val sharedPreferences = application.getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
 
     var id: String = "id"
     fun setPriority(value: Priority) {
@@ -37,26 +43,34 @@ class AdditionViewModel(application: Application) : AndroidViewModel(application
         _deadlineDate.value = value
     }
 
-    fun saveCase() {
-        val todoItem = loadedTodoItem?.copy(
-            text = text.value,
-            priority = priority.value,
-            deadline = deadlineDate.value
-        ) ?: TodoItem(
-            id = id,
-            text = text.value,
-            priority = priority.value,
-            isCompleted = false,
-            creationDate = Date(),
-            deadline = deadlineDate.value
-        )
-        viewModelScope.launch {
-            if (id == "id") {
-                repository.addItem(todoItem)
-            } else {
-                repository.updateItem(todoItem, true)
+    fun saveCase():StateFlow<Boolean>{
+        val isLoadedFlow = MutableStateFlow(false)
+        if (!saved) {
+            saved = true
+            val todoItem = loadedTodoItem?.copy(
+                text = text.value,
+                priority = priority.value,
+                deadline = deadlineDate.value,
+                changingDate = Date()
+            ) ?: TodoItem(
+                id = hashString(Random.nextInt().toString()),
+                text = text.value,
+                priority = priority.value,
+                isCompleted = false,
+                creationDate = Date(),
+                deadline = deadlineDate.value
+            )
+            viewModelScope.launch {
+                val value = repository.getItemById(todoItem.id)
+                if (value == null) {
+                    repository.addItem(todoItem)
+                } else {
+                    repository.updateItem(todoItem, true)
+                }
+                isLoadedFlow.value = true
             }
         }
+        return isLoadedFlow
     }
 
     fun loadTodoItem(id: String) {
@@ -73,10 +87,16 @@ class AdditionViewModel(application: Application) : AndroidViewModel(application
 
     fun deleteTodoItem() {
         if (canDelete) {
+            canDelete = false
             viewModelScope.launch {
                 repository.deleteItem(id)
                 _isDeleted.value = true
             }
         }
     }
+    private fun hashString(str: String): String {
+        return MessageDigest.getInstance("sha-256").digest(str.toByteArray())
+            .fold("") { string, it -> string + "%02x".format(it) }
+    }
+
 }

@@ -34,6 +34,11 @@ class ItemTouchHelperCallback(
         }
     }
 
+    override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+        super.onSelectedChanged(viewHolder, actionState)
+        adapter.onItemSelected(actionState)
+    }
+
     override fun onChildDraw(
         c: Canvas,
         recyclerView: RecyclerView,

@@ -11,9 +11,8 @@ import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.withStarted
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import kotlinx.coroutines.launch
@@ -27,9 +26,17 @@ import java.util.Locale
 class AdditionFragment : Fragment() {
     private var _binding: FragmentAdditionBinding? = null
     private val binding get() = _binding!!
-    private lateinit var navController: NavController
-    private lateinit var viewModel: AdditionViewModel
-    private lateinit var errorToast: Toast
+    private val navController: NavController by lazy {
+        NavHostFragment.findNavController(this)
+    }
+    private val viewModel: AdditionViewModel by viewModels()
+    private val errorToast: Toast by lazy {
+        Toast.makeText(
+            requireContext(),
+            resources.getString(R.string.addition_error),
+            Toast.LENGTH_SHORT
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,13 +48,6 @@ class AdditionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        navController = NavHostFragment.findNavController(this)
-        errorToast = Toast.makeText(
-            requireContext(),
-            resources.getString(R.string.addition_error),
-            Toast.LENGTH_SHORT
-        )
-        viewModel = ViewModelProvider(this)[AdditionViewModel::class.java]
         lifecycleScope.launch {
             viewModel.isDeleted.collect {
                 if (it) {
@@ -56,14 +56,14 @@ class AdditionFragment : Fragment() {
             }
         }
         lifecycleScope.launch {
-            viewModel.text.collect{
+            viewModel.text.collect {
                 if (it != binding.todoEditText.text.toString()) {
                     binding.todoEditText.setText(it)
                 }
             }
         }
-        lifecycleScope.launch{
-            viewModel.priority.collect{
+        lifecycleScope.launch {
+            viewModel.priority.collect {
                 when (it) {
                     Priority.LOW -> {
                         binding.priorityText.setText(R.string.low)
@@ -80,7 +80,7 @@ class AdditionFragment : Fragment() {
             }
         }
         lifecycleScope.launch {
-            viewModel.deadlineDate.collect{
+            viewModel.deadlineDate.collect {
                 if (it != null) {
                     binding.deadlineSwitcher.isChecked = true
                     val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
@@ -118,8 +118,13 @@ class AdditionFragment : Fragment() {
             if (binding.todoEditText.text.isEmpty()) {
                 errorToast.show()
             } else {
-                viewModel.saveCase()
-                navController.popBackStack()
+                lifecycleScope.launch {
+                    viewModel.saveCase().collect {
+                        if (it) {
+                            navController.popBackStack()
+                        }
+                    }
+                }
             }
         }
         binding.priority.setOnClickListener {
@@ -144,14 +149,17 @@ class AdditionFragment : Fragment() {
                     viewModel.setPriority(Priority.LOW)
                     true
                 }
+
                 R.id.none -> {
                     viewModel.setPriority(Priority.NORMAL)
                     true
                 }
+
                 R.id.high -> {
                     viewModel.setPriority(Priority.HIGH)
                     true
                 }
+
                 else -> false
             }
         }
@@ -170,13 +178,18 @@ class AdditionFragment : Fragment() {
         datePicker.show()
     }
 
-    private fun enableDeleteButton(){
+    private fun enableDeleteButton() {
         binding.deleteTextview.setTextColor(
             resources.getColor(
                 R.color.red,
                 requireContext().theme
             )
         )
-        binding.deleteImageview.setColorFilter(resources.getColor(R.color.red, requireContext().theme))
+        binding.deleteImageview.setColorFilter(
+            resources.getColor(
+                R.color.red,
+                requireContext().theme
+            )
+        )
     }
 }
