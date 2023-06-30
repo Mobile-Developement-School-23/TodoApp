@@ -20,6 +20,7 @@
         <item name="infoButtonColor">@color/gray_button_dark</item>
         <item name="checkBoxInactiveColor">@color/gray_check_box</item>
         <item name="android:windowAnimationStyle">@style/WindowChangeThemeStyle</item>
+        <item name="connectionErrorColor">#585858</item>
     </style>
     <style name="ThemeOverlay.ToDo.FullscreenContainer" parent="">
         <item name="fullscreenBackgroundColor">@color/black_primary</item>

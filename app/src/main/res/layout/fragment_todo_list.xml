@@ -7,7 +7,7 @@
     android:background="?attr/fullscreenBackgroundColor"
     android:fitsSystemWindows="true"
     android:theme="@style/ThemeOverlay.ToDo.FullscreenContainer"
-    tools:context=".ui.todo_list_fragment.view.TodoListFragment">
+    tools:context=".ui.todo_list_fragment.TodoListFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
@@ -42,27 +42,29 @@
                 app:layout_collapseMode="parallax"
                 app:layout_constraintStart_toStartOf="@+id/textView"
                 app:layout_constraintTop_toBottomOf="@+id/textView" />
+
             <TextView
                 android:id="@+id/filter_textview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="24dp"
-                android:textSize="16sp"
-                app:layout_collapseMode="parallax"
-                android:textColor="?attr/textFillColor"
-                android:text="Filter"
-                android:drawableTint="?attr/textFillColor"
                 android:layout_gravity="bottom|end"
-                app:drawableEndCompat="@drawable/ic_filter_list" />
+                android:layout_marginEnd="24dp"
+                android:drawableTint="?attr/textFillColor"
+                android:text="Filter"
+                android:textColor="?attr/textFillColor"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_filter_list"
+                app:layout_collapseMode="parallax" />
+
             <ImageView
                 android:id="@+id/settings"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:padding="10dp"
-                android:layout_marginEnd="10dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
                 android:background="?android:selectableItemBackgroundBorderless"
+                android:padding="10dp"
                 android:src="@drawable/ic_settings"
                 app:tint="?attr/textFillColor" />
         </com.google.android.material.appbar.CollapsingToolbarLayout>
@@ -101,10 +103,12 @@
                 android:textColor="?attr/textFillColor"
                 android:textSize="40sp" />
         </LinearLayout>
+
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipe_refresh"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+
             <LinearLayout
                 android:id="@+id/list"
                 android:layout_width="match_parent"
@@ -114,6 +118,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/todo_list"
                     android:layout_width="match_parent"
@@ -150,28 +155,36 @@
             app:layout_constraintTop_toTopOf="parent"
             app:title="@string/my_cases" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-    <LinearLayout
+
+    <FrameLayout
         android:id="@+id/error_layout"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:gravity="center"
-        android:orientation="vertical"
         android:layout_gravity="bottom|start"
-        android:layout_marginBottom="30dp"
-        android:layout_marginStart="30dp">
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="130dp"
+        android:gravity="center"
+        android:visibility="gone"
+        android:padding="10dp"
+        android:background="@drawable/error_layout_background"
+        android:orientation="vertical">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:text="Ошибка подключения\nТекущие данные неактуальны"/>
+            android:layout_gravity="start"
+            android:text="@string/no_connection" />
+
         <TextView
             android:id="@+id/retry_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?attr/colorPrimary"
-            android:text="Повторить"/>
-    </LinearLayout>
+            android:layout_gravity="end"
+            android:text="@string/retry"
+            android:textColor="?attr/colorPrimary" />
+    </FrameLayout>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_case"
         android:layout_width="wrap_content"

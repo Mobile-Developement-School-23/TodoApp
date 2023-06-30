@@ -19,4 +19,6 @@
     <string name="light">Светлая</string>
     <string name="dark">Темная</string>
     <string name="system">Системная</string>
+    <string name="retry">Повторить</string>
+    <string name="no_connection">Нет подключения</string>
 </resources>

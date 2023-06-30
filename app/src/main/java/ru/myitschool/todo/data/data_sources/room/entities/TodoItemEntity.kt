@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity(tableName = "todo_items")
 data class TodoItemEntity(
     @PrimaryKey val id: String,
     @ColumnInfo(name = "text") val text: String,

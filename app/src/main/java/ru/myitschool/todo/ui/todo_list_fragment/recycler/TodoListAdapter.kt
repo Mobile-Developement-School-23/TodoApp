@@ -16,7 +16,7 @@ import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.domain.CommonCallbackImpl
-import ru.myitschool.todo.ui.todo_list_fragment.view.recycler.ItemTouchHelperAdapter
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperAdapter
 import java.util.*
 
 

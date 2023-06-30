@@ -1,7 +1,5 @@
 package ru.myitschool.todo.ui.settings_fragment.view
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,8 +8,11 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import ru.myitschool.todo.App
 import ru.myitschool.todo.R
+import ru.myitschool.todo.data.repository.SharedPreferencesRepository
 import ru.myitschool.todo.databinding.FragmentSettingsBinding
+import javax.inject.Inject
 
 
 class SettingsFragment : Fragment() {
@@ -21,9 +22,9 @@ class SettingsFragment : Fragment() {
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
-    private val sharedPreferences:SharedPreferences by lazy{
-        requireContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
-    }
+
+    @Inject
+    lateinit var sharedRepository:SharedPreferencesRepository
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,7 +36,8 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        when(sharedPreferences.getInt("theme", 2)){
+        (requireActivity().application as App).getAppComponent().inject(this)
+        when(sharedRepository.getTheme()){
             0->{
                 binding.themeSelector.check(R.id.light_theme_button)
             }
@@ -51,15 +53,15 @@ class SettingsFragment : Fragment() {
             when (checkedId){
                 R.id.light_theme_button->{
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    sharedPreferences.edit().putInt("theme", 0).apply()
+                    sharedRepository.setTheme(0)
                 }
                 R.id.dark_theme_button->{
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    sharedPreferences.edit().putInt("theme", 1).apply()
+                    sharedRepository.setTheme(1)
                 }
                 R.id.system_theme_button->{
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                    sharedPreferences.edit().putInt("theme", 2).apply()
+                    sharedRepository.setTheme(2)
                 }
             }
         }

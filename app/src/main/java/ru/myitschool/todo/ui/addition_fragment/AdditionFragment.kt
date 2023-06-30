@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.addition_fragment.view
+package ru.myitschool.todo.ui.addition_fragment
 
 import android.app.DatePickerDialog
 import android.icu.text.SimpleDateFormat
@@ -16,10 +16,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import kotlinx.coroutines.launch
+import ru.myitschool.todo.App
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.databinding.FragmentAdditionBinding
-import ru.myitschool.todo.ui.addition_fragment.view_model.AdditionViewModel
+import ru.myitschool.todo.ui.ViewModelFactory
 import java.util.Date
 import java.util.Locale
 
@@ -29,7 +30,11 @@ class AdditionFragment : Fragment() {
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
-    private val viewModel: AdditionViewModel by viewModels()
+    private val viewModel: AdditionViewModel by viewModels{
+        ViewModelFactory{
+            (requireActivity().application as App).getAppComponent().additionViewModel()
+        }
+    }
     private val errorToast: Toast by lazy {
         Toast.makeText(
             requireContext(),

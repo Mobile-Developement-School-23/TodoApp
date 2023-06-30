@@ -7,12 +7,12 @@
 
     <fragment
         android:id="@+id/additionFragment"
-        android:name="ru.myitschool.todo.ui.addition_fragment.view.AdditionFragment"
+        android:name="ru.myitschool.todo.ui.addition_fragment.AdditionFragment"
         android:label="fragment_addition"
         tools:layout="@layout/fragment_addition" />
     <fragment
         android:id="@+id/todoListFragment"
-        android:name="ru.myitschool.todo.ui.todo_list_fragment.view.TodoListFragment"
+        android:name="ru.myitschool.todo.ui.todo_list_fragment.TodoListFragment"
         android:label="fragment_todo_list"
         tools:layout="@layout/fragment_todo_list" >
         <action

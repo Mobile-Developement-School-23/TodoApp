@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.todo_list_fragment.view
+package ru.myitschool.todo.ui.todo_list_fragment
 
 import android.animation.ObjectAnimator
 import android.os.Bundle
@@ -14,14 +14,15 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import kotlinx.coroutines.launch
+import ru.myitschool.todo.App
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.databinding.FragmentTodoListBinding
 import ru.myitschool.todo.ui.adapters.CounterCallback
 import ru.myitschool.todo.ui.adapters.SelectedCallback
 import ru.myitschool.todo.ui.adapters.TodoListAdapter
-import ru.myitschool.todo.ui.todo_list_fragment.view.recycler.ItemTouchHelperCallback
-import ru.myitschool.todo.ui.todo_list_fragment.view_model.TodoListViewModel
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperCallback
+import ru.myitschool.todo.ui.ViewModelFactory
 
 
 class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
@@ -31,13 +32,17 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
-    private var scrolled: Boolean = false
-    private val viewModel: TodoListViewModel by viewModels()
+    private val viewModel: TodoListViewModel by viewModels{
+        ViewModelFactory {
+            (requireActivity().application as App).getAppComponent().todoListViewModel()
+        }
+    }
     private val adapter: TodoListAdapter by lazy {
         TodoListAdapter(viewModel, this, this)
     }
     private var isHidden = false
     private var fabPosition: Float = 0F
+    private var scrolled: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -66,10 +71,6 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         }
 
         binding.swipeRefresh.setColorSchemeResources(R.color.blue)
-
-        binding.filterTextview.setOnClickListener {
-            showPopupMenu(it)
-        }
         binding.swipeRefresh.setOnRefreshListener {
             lifecycleScope.launch {
                 requestUpdateData()
@@ -78,6 +79,10 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         binding.swipeRefresh.setOnChildScrollUpCallback { _, _ ->
             binding.appBar
             false
+        }
+
+        binding.filterTextview.setOnClickListener {
+            showPopupMenu(it)
         }
 
         // Настройка recyclerview
@@ -99,7 +104,11 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                         } else {
                             binding.emptyInfo.visibility = View.GONE
                         }
+                        val previousSize = adapter.itemCount
                         adapter.todoList = it
+                        if (previousSize < adapter.itemCount){
+                            binding.todoList.scrollToPosition(0)
+                        }
                     }
                 }
             }
@@ -216,21 +225,24 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
     }
 
     private fun animateFAB(oldScrollY: Int) {
+        var animator = ObjectAnimator()
+        var changed = false
         if (oldScrollY < 0 && !isHidden) {
-            val animator = ObjectAnimator.ofFloat(
+            animator = ObjectAnimator.ofFloat(
                 binding.addCase,
                 "translationY", fabPosition, fabPosition - 100, binding.root.height.toFloat()
             )
-            animator.interpolator = AccelerateInterpolator()
-            animator.duration = 500
             isHidden = true
-            animator.start()
+            changed = true
         } else if (oldScrollY > 0 && isHidden) {
-            val animator = ObjectAnimator.ofFloat(
+            animator = ObjectAnimator.ofFloat(
                 binding.addCase,
                 "translationY", binding.root.height.toFloat(), fabPosition - 100, fabPosition
             )
             isHidden = false
+            changed = true
+        }
+        if (changed) {
             animator.interpolator = AccelerateInterpolator()
             animator.duration = 500
             animator.start()

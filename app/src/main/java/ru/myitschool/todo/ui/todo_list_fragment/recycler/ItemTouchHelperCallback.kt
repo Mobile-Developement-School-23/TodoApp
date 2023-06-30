@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.todo_list_fragment.view.recycler
+package ru.myitschool.todo.ui.todo_list_fragment.recycler
 
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -88,4 +88,9 @@ class ItemTouchHelperCallback(
         }
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }
+}
+interface ItemTouchHelperAdapter {
+    fun onItemDismiss(position:Int)
+    fun onItemChecked(position: Int)
+    fun onItemSelected(actionState:Int)
 }
