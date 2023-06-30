@@ -3,10 +3,10 @@ package ru.myitschool.todo.data.repository
 import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import ru.myitschool.todo.data.data_sources.network.api.TodoService
-import ru.myitschool.todo.data.data_sources.network.data_mappers.TodoNetworkMapper
-import ru.myitschool.todo.data.data_sources.network.entities.TodoItemListRequest
-import ru.myitschool.todo.data.data_sources.network.entities.TodoItemRequest
+import ru.myitschool.todo.data.data_sources.network.todoitems_server.TodoService
+import ru.myitschool.todo.data.data_sources.network.todoitems_server.data_mappers.TodoNetworkMapper
+import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemListRequest
+import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemRequest
 import ru.myitschool.todo.data.data_sources.room.dao.TodoDao
 import ru.myitschool.todo.data.data_sources.room.data_mappers.ImportanceMapper
 import ru.myitschool.todo.data.data_sources.room.data_mappers.TodoMapper
@@ -20,17 +20,33 @@ import javax.inject.Inject
 @AppScope
 class TodoItemsRepository @Inject constructor(
     private val todoService: TodoService,
-    private val sharedPrefRepository:SharedPreferencesRepository,
+    private val sharedPrefRepository: SharedPreferencesRepository,
     private val database: AppDatabase
 ) {
-
+    companion object{
+        private const val DEFAULT_TOKEN = "Bearer astely"
+    }
+    private var token: String = DEFAULT_TOKEN
     private val todoDao: TodoDao by lazy {
         database.todoDao()
     }
     val todoItems: Flow<List<TodoItem>> =
         todoDao.loadAllTodoItems().map { list -> list.map { TodoMapper.entityToModel(it) } }
 
+    init {
+        val savedToken = sharedPrefRepository.getAuthToken()
+        if (!savedToken.isNullOrEmpty()) {
+            token = savedToken
+            println(token)
+        }
+    }
 
+    fun login(newToken: String) {
+        token = newToken
+    }
+    fun logout(){
+        token = DEFAULT_TOKEN
+    }
 
     suspend fun addItem(todoItem: TodoItem) {
         val newTodoItem = todoItem.copy(changingDate = Date())
@@ -39,14 +55,13 @@ class TodoItemsRepository @Inject constructor(
         val requestItem = TodoItemRequest(element = newItem)
         try {
             val response =
-                todoService.addTodoItem(sharedPrefRepository.getRevision(), requestItem)
+                todoService.addTodoItem(token, sharedPrefRepository.getRevision(), requestItem)
             if (response.isSuccessful) {
                 val result = response.body()
                 if (result != null) {
                     sharedPrefRepository.writeRevision(result.revision)
                 }
-            }
-            else{
+            } else {
                 updateItems()
             }
         } catch (_: Exception) {
@@ -73,6 +88,7 @@ class TodoItemsRepository @Inject constructor(
         val requestItem = TodoItemRequest(element = newItem)
         try {
             val response = todoService.changeTodoItem(
+                token,
                 sharedPrefRepository.getRevision(),
                 newItem.id,
                 requestItem
@@ -82,8 +98,7 @@ class TodoItemsRepository @Inject constructor(
                 if (result != null) {
                     sharedPrefRepository.writeRevision(result.revision)
                 }
-            }
-            else{
+            } else {
                 updateItems()
             }
         } catch (_: Exception) {
@@ -97,14 +112,13 @@ class TodoItemsRepository @Inject constructor(
     suspend fun deleteItem(id: String) {
         todoDao.deleteById(id)
         try {
-            val response = todoService.deleteTodoItem(sharedPrefRepository.getRevision(), id)
+            val response = todoService.deleteTodoItem(token, sharedPrefRepository.getRevision(), id)
             if (response.isSuccessful) {
                 val result = response.body()
                 if (result != null) {
                     sharedPrefRepository.writeRevision(result.revision)
                 }
-            }
-            else{
+            } else {
                 updateItems()
             }
         } catch (_: Exception) {
@@ -112,9 +126,9 @@ class TodoItemsRepository @Inject constructor(
         }
     }
 
-    suspend fun loadAllItems(func: (value: Boolean) -> Unit) {
+    suspend fun loadAllItems(func: (value: Boolean) -> Unit = {}) {
         try {
-            val response = todoService.loadList()
+            val response = todoService.loadList(token)
             if (response.isSuccessful) {
                 val result = response.body()
                 if (result != null) {
@@ -138,40 +152,61 @@ class TodoItemsRepository @Inject constructor(
 
     suspend fun getAllItems(): List<TodoItem> =
         todoDao.loadAllTodoItemsAsync().map { TodoMapper.entityToModel(it) }
-    suspend fun updateItems(){
+
+    suspend fun updateItems(func: (value: Boolean) -> Unit = {}) {
         try {
-            val response = todoService.loadList()
-            if (response.isSuccessful){
+            val response = todoService.loadList(token)
+            if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
                     val savedItems = getAllItems().toMutableList()
                     val loadedItems = body.list.toMutableList()
-                    for (i in savedItems){ //Тут должна быть рабочая синхронизация, но удаление чет пошло по ж***
-                        if (loadedItems.all { it.id != i.id }){
+                    for (i in savedItems) { //Тут должна быть рабочая синхронизация, но удаление чет пошло по ж***
+                        if (loadedItems.all { it.id != i.id }) {
                             loadedItems.add(TodoNetworkMapper.modelToEntity(i))
-                        }
-                        else{
+                        } else {
                             val index = loadedItems.indexOfFirst { it.id == i.id }
-                            if (index != -1){
+                            if (index != -1) {
                                 loadedItems[index] = TodoNetworkMapper.modelToEntity(i)
                             }
                         }
                     }
-                    val updateResponse = todoService.updateList(sharedPrefRepository.getRevision(), TodoItemListRequest(loadedItems))
-                    if (updateResponse.isSuccessful){
+                    todoDao.rewriteTable(body.list.map {
+                        TodoMapper.modelToEntity(
+                            TodoNetworkMapper.entityToModel(
+                                it
+                            )
+                        )
+                    })
+                    func(true)
+                    val updateResponse = todoService.updateList(
+                        token,
+                        sharedPrefRepository.getRevision(),
+                        TodoItemListRequest(loadedItems)
+                    )
+                    if (updateResponse.isSuccessful) {
                         val updateBody = updateResponse.body()
-                        if (updateBody != null){
+                        if (updateBody != null) {
                             todoDao.rewriteTable(
-                                updateBody.list.map { TodoMapper.modelToEntity(TodoNetworkMapper.entityToModel(it)) }
+                                updateBody.list.map {
+                                    TodoMapper.modelToEntity(
+                                        TodoNetworkMapper.entityToModel(
+                                            it
+                                        )
+                                    )
+                                }
                             )
                             sharedPrefRepository.writeRevision(updateBody.revision)
                         }
                     }
                 }
             }
-        }
-        catch (e :Exception){
+            else{
+                func(false)
+            }
+        } catch (e: Exception) {
             Log.e("Repository", e.toString())
+            func(false)
         }
     }
 }

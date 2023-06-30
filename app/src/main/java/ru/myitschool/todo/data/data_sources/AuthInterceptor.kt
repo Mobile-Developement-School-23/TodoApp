@@ -4,8 +4,7 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 
-class AuthInterceptor : Interceptor {
-    private val token = "Bearer astely"
+class AuthInterceptor(private val token:String = "Bearer astely"): Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request: Request = chain.request()

@@ -1,6 +1,6 @@
-package ru.myitschool.todo.data.data_sources.network.data_mappers
+package ru.myitschool.todo.data.data_sources.network.todoitems_server.data_mappers
 
-import ru.myitschool.todo.data.data_sources.network.entities.TodoItemNetworkEntity
+import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemNetworkEntity
 import ru.myitschool.todo.data.data_sources.room.data_mappers.ImportanceMapper
 import ru.myitschool.todo.data.data_sources.room.entities.TodoItemEntity
 import ru.myitschool.todo.data.models.TodoItem

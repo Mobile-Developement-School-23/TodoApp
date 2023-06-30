@@ -73,7 +73,7 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
     }
     fun reloadData(callback:(error:Int)->Unit = {}) {
         viewModelScope.launch (Dispatchers.IO){
-            repository.loadAllItems{
+            repository.updateItems{
                 launch(Dispatchers.Main) {
                     if (it) {
                         callback(0)

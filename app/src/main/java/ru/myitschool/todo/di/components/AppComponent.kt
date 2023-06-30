@@ -9,6 +9,7 @@ import ru.myitschool.todo.di.modules.NetworkModule
 import ru.myitschool.todo.di.scopes.AppScope
 import ru.myitschool.todo.ui.addition_fragment.AdditionViewModel
 import ru.myitschool.todo.ui.settings_fragment.view.SettingsFragment
+import ru.myitschool.todo.ui.settings_fragment.view.SettingsViewModel
 import ru.myitschool.todo.ui.todo_list_fragment.TodoListViewModel
 
 @Component(modules = [NetworkModule::class])
@@ -22,6 +23,7 @@ interface AppComponent {
     }
     fun todoListViewModel(): TodoListViewModel
     fun additionViewModel(): AdditionViewModel
+    fun settingViewModel(): SettingsViewModel
     fun inject(fragment:SettingsFragment)
     fun inject(worker: NetworkWorker)
     fun inject(app:App)

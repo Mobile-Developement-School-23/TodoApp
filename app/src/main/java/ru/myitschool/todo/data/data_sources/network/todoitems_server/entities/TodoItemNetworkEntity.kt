@@ -1,4 +1,4 @@
-package ru.myitschool.todo.data.data_sources.network.entities
+package ru.myitschool.todo.data.data_sources.network.todoitems_server.entities
 
 import com.google.gson.annotations.SerializedName
 

@@ -8,9 +8,8 @@ import dagger.Provides
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
-import ru.myitschool.todo.data.data_sources.AuthInterceptor
-import ru.myitschool.todo.data.data_sources.network.api.TodoService
+import ru.myitschool.todo.data.data_sources.network.todoitems_server.TodoService
+import ru.myitschool.todo.data.data_sources.network.yandex_passport.YandexPassportService
 import ru.myitschool.todo.data.data_sources.room.database.AppDatabase
 import ru.myitschool.todo.di.scopes.AppScope
 import javax.inject.Inject
@@ -20,11 +19,20 @@ class NetworkModule {
     @Provides
     @AppScope
     fun provideTodoRetrofitService(): TodoService {
-        val okHttpClient = OkHttpClient.Builder().addInterceptor(AuthInterceptor()).build()
+        val okHttpClient = OkHttpClient.Builder().build()
         return Retrofit.Builder().baseUrl(TodoService.BASE_URL).client(okHttpClient)
             .addConverterFactory(
                 GsonConverterFactory.create()
             ).build().create(TodoService::class.java)
+    }
+    @Provides
+    @AppScope
+    fun providePassportRetrofitService(): YandexPassportService {
+        val okHttpClient = OkHttpClient.Builder().build()
+        return Retrofit.Builder().baseUrl(YandexPassportService.BASE_URL).client(okHttpClient)
+            .addConverterFactory(
+                GsonConverterFactory.create()
+            ).build().create(YandexPassportService::class.java)
     }
     @Provides
     @Inject
