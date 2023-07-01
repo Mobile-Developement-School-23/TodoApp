@@ -17,6 +17,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.google.android.material.snackbar.Snackbar
 import com.yandex.authsdk.YandexAuthLoginOptions
 import com.yandex.authsdk.YandexAuthOptions
 import com.yandex.authsdk.YandexAuthSdk
@@ -122,6 +123,13 @@ class SettingsFragment : Fragment() {
                 }
             }
         }
+        lifecycleScope.launch{
+            viewModel.error.collect{
+                if (it){
+                    Snackbar.make(binding.yandexLogoutButton, resources.getString(R.string.no_connection), Snackbar.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
     private fun runYandexAuth(){
         val intent: Intent = sdk.createLoginIntent(YandexAuthLoginOptions.Builder().setLoginType(LoginType.NATIVE).build())
@@ -142,4 +150,5 @@ class SettingsFragment : Fragment() {
             Log.e("SettingFragment", e.toString())
         }
     }
+
 }

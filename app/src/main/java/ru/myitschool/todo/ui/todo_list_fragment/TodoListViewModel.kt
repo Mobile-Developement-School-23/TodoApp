@@ -28,8 +28,6 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
 
     private val _isExpanded = MutableStateFlow(true)
     val isExpanded: StateFlow<Boolean> get() = _isExpanded
-    private val _loadedError = MutableStateFlow(false)
-    val loadedError: StateFlow<Boolean> get() = _loadedError
 
 
     init {

@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.App
 import ru.myitschool.todo.R
@@ -146,16 +147,6 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                 binding.filterTextview.setText(text)
             }
         }
-        lifecycleScope.launch {
-            viewModel.loadedError.collect {
-                if (it && _binding != null) {
-                    binding.errorLayout.visibility = View.VISIBLE
-                }
-            }
-        }
-        binding.retryButton.setOnClickListener {
-            requestUpdateData()
-        }
     }
 
     override fun onPause() {
@@ -255,9 +246,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                 if (_binding != null) {
                     binding.swipeRefresh.isRefreshing = false
                     if (error == 1) {
-                        binding.errorLayout.visibility = View.VISIBLE
-                    } else {
-                        binding.errorLayout.visibility = View.GONE
+                        Snackbar.make(binding.addCase, resources.getString(R.string.no_connection), Snackbar.LENGTH_SHORT).show()
                     }
                 }
             }

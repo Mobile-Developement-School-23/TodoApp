@@ -11,9 +11,13 @@ class YandexPassportRepository @Inject constructor(
     suspend fun getInfo():InfoResponse?{
         val value = sharedPreferencesRepository.getAuthToken()
         if (value != null) {
-            val result = retrofitService.getInfo(value)
-            println(result)
-            return result.body()
+            return try {
+                val result = retrofitService.getInfo(value)
+                println(result)
+                result.body()
+            } catch (_:Exception){
+                null
+            }
         }
         return null
     }
