@@ -21,4 +21,6 @@
     <string name="system">Системная</string>
     <string name="retry">Повторить</string>
     <string name="no_connection">Нет подключения</string>
+    <string name="logout">Выйти</string>
+    <string name="login_with_yandex">Войти с Яндекс ID</string>
 </resources>

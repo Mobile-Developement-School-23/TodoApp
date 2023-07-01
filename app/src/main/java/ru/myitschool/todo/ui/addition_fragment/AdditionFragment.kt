@@ -15,6 +15,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.App
 import ru.myitschool.todo.R
@@ -120,9 +121,13 @@ class AdditionFragment : Fragment() {
             navController.popBackStack()
         }
         binding.save.setOnClickListener {
+            if (!binding.close.isEnabled){
+                Snackbar.make(binding.deleteButton, "Saving", Snackbar.LENGTH_SHORT).show()
+            }
             if (binding.todoEditText.text.isEmpty()) {
                 errorToast.show()
             } else {
+                binding.close.isEnabled = false
                 lifecycleScope.launch {
                     viewModel.saveCase().collect {
                         if (it) {

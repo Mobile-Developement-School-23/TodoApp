@@ -9,7 +9,9 @@ import android.view.animation.AccelerateInterpolator
 import android.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -68,6 +70,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             } else {
                 viewModel.setExpanded(true)
                 closeToolBar()
+                animateFAB(1)
             }
         }
 
@@ -91,24 +94,25 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         val touchHelper = ItemTouchHelper(callback)
         binding.todoList.setItemViewCacheSize(adapter.itemCount)
         binding.todoList.adapter = adapter
-        binding.todoList.itemAnimator?.removeDuration = 0
         binding.todoList.setOnScrollChangeListener { _, _, _, _, oldScrollY ->
             animateFAB(oldScrollY)
         }
         touchHelper.attachToRecyclerView(binding.todoList)
-        lifecycleScope.launch {
-            viewModel.todoItems.collect {
-                if (it != null && _binding != null) {
-                    if (!binding.todoList.isComputingLayout) {
-                        if (it.isEmpty()) {
-                            binding.emptyInfo.visibility = View.VISIBLE
-                        } else {
-                            binding.emptyInfo.visibility = View.GONE
-                        }
-                        val previousSize = adapter.itemCount
-                        adapter.todoList = it
-                        if (previousSize < adapter.itemCount){
-                            binding.todoList.scrollToPosition(0)
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.todoItems.collect {
+                    if (it != null) {
+                        if (!binding.todoList.isComputingLayout) {
+                            if (it.isEmpty()) {
+                                binding.emptyInfo.visibility = View.VISIBLE
+                            } else {
+                                binding.emptyInfo.visibility = View.GONE
+                            }
+                            val previousSize = adapter.itemCount
+                            adapter.submitList(it)
+                            if (previousSize < adapter.itemCount) {
+                                binding.todoList.scrollToPosition(0)
+                            }
                         }
                     }
                 }

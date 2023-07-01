@@ -1,12 +1,10 @@
-package ru.myitschool.todo.di.components
+package ru.myitschool.todo.di
 
 import android.content.Context
 import dagger.BindsInstance
 import dagger.Component
 import ru.myitschool.todo.App
 import ru.myitschool.todo.NetworkWorker
-import ru.myitschool.todo.di.modules.NetworkModule
-import ru.myitschool.todo.di.scopes.AppScope
 import ru.myitschool.todo.ui.addition_fragment.AdditionViewModel
 import ru.myitschool.todo.ui.settings_fragment.view.SettingsFragment
 import ru.myitschool.todo.ui.settings_fragment.view.SettingsViewModel
@@ -19,7 +17,7 @@ interface AppComponent {
     interface Factory{
         fun create(
             @BindsInstance context:Context
-        ):AppComponent
+        ): AppComponent
     }
     fun todoListViewModel(): TodoListViewModel
     fun additionViewModel(): AdditionViewModel

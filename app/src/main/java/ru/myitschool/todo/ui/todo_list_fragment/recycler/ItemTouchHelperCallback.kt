@@ -49,9 +49,6 @@ class ItemTouchHelperCallback(
         isCurrentlyActive: Boolean
     ) {
         val view = viewHolder.itemView
-        if (abs(dX) > view.width / 1.2) {
-            return
-        }
         if (dX > 0) {
             val paint = Paint()
             paint.color = view.resources.getColor(R.color.green, view.context.theme)
@@ -69,6 +66,7 @@ class ItemTouchHelperCallback(
             drawable?.draw(c)
         } else if (dX < 0) {
             val paint = Paint()
+            println(dX)
             paint.color = view.resources.getColor(R.color.red, view.context.theme)
             c.drawRect(
                 view.right + dX, view.top.toFloat(),

@@ -1,4 +1,4 @@
-package ru.myitschool.todo.di.scopes
+package ru.myitschool.todo.di
 
 import javax.inject.Scope
 

@@ -13,7 +13,7 @@ import ru.myitschool.todo.data.data_sources.room.data_mappers.TodoMapper
 import ru.myitschool.todo.data.data_sources.room.database.AppDatabase
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
-import ru.myitschool.todo.di.scopes.AppScope
+import ru.myitschool.todo.di.AppScope
 import java.util.Date
 import javax.inject.Inject
 

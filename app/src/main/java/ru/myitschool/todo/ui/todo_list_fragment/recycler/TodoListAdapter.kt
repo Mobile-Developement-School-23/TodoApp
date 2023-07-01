@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
@@ -24,31 +25,31 @@ class TodoListAdapter(
     private val itemChanger: ItemChanger,
     private val selectedCallback: SelectedCallback,
     private val counterCallback: CounterCallback
-) : RecyclerView.Adapter<TodoListAdapter.TodoListHolder>(), ItemTouchHelperAdapter {
-    var todoList = listOf<TodoItem>()
-        set(value) {
+) : ListAdapter<TodoItem, TodoListAdapter.TodoListHolder>(DiffCallback()), ItemTouchHelperAdapter {
+    class DiffCallback: DiffUtil.ItemCallback<TodoItem>() {
+        override fun areItemsTheSame(oldItem: TodoItem, newItem: TodoItem) = oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: TodoItem, newItem: TodoItem): Boolean {
+            return oldItem.deadline == newItem.deadline && oldItem.text == newItem.text &&
+                    oldItem.priority == newItem.priority && oldItem.isCompleted == newItem.isCompleted
+        }
+
+    }
+    init {
+        counterCallback.onCount(0)
+    }
+
+    override fun submitList(list: List<TodoItem>?) {
+        if (list != null){
             var counter = 0
-            for (i in value) {
-                if (i.isCompleted) {
+            for (i in list){
+                if (i.isCompleted){
                     counter++
                 }
             }
-            val callback = CommonCallbackImpl(
-                oldItems = field,
-                newItems = value,
-                areItemsTheSameImpl = { oldItem, newItem -> oldItem.id == newItem.id },
-                areContentsTeSameImpl = { oldItem, newItem ->
-                    oldItem.deadline == newItem.deadline && oldItem.text == newItem.text &&
-                            oldItem.priority == newItem.priority && oldItem.isCompleted == newItem.isCompleted
-                }
-            )
             counterCallback.onCount(counter)
-            field = value.toMutableList()
-            val diffResult = DiffUtil.calculateDiff(callback)
-            diffResult.dispatchUpdatesTo(this)
         }
-    init {
-        counterCallback.onCount(0)
+        super.submitList(list)
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoListHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
@@ -62,16 +63,15 @@ class TodoListAdapter(
     }
 
     override fun onBindViewHolder(holder: TodoListHolder, position: Int) {
-        holder.onBind(todoList[position])
+        holder.onBind(currentList[position])
     }
 
-    override fun getItemCount(): Int = todoList.size
     override fun onItemDismiss(position: Int) {
-        itemChanger.deleteItem(todoList[position].id)
+        itemChanger.deleteItem(currentList[position].id)
     }
 
     override fun onItemChecked(position: Int) {
-        val todoItem = todoList[position].copy(isCompleted = !todoList[position].isCompleted)
+        val todoItem = currentList[position].copy(isCompleted = !currentList[position].isCompleted)
         itemChanger.updateItem(todoItem, false)
     }
 

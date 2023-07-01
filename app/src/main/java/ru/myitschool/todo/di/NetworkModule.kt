@@ -1,4 +1,4 @@
-package ru.myitschool.todo.di.modules
+package ru.myitschool.todo.di
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -11,7 +11,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.TodoService
 import ru.myitschool.todo.data.data_sources.network.yandex_passport.YandexPassportService
 import ru.myitschool.todo.data.data_sources.room.database.AppDatabase
-import ru.myitschool.todo.di.scopes.AppScope
 import javax.inject.Inject
 
 @Module
