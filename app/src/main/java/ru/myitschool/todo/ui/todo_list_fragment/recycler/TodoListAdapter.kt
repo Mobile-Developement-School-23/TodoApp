@@ -1,4 +1,4 @@
-package ru.myitschool.todo.ui.adapters
+package ru.myitschool.todo.ui.todo_list_fragment.recycler
 
 import android.graphics.Paint
 import android.icu.text.SimpleDateFormat
@@ -16,8 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
-import ru.myitschool.todo.domain.CommonCallbackImpl
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperAdapter
 import java.util.*
 
 
@@ -35,11 +33,13 @@ class TodoListAdapter(
         }
 
     }
+    var adapterList = listOf<TodoItem>()
     init {
         counterCallback.onCount(0)
     }
 
     override fun submitList(list: List<TodoItem>?) {
+        adapterList = list?: listOf()
         if (list != null){
             var counter = 0
             for (i in list){
@@ -128,7 +128,12 @@ class TodoListAdapter(
             }
             todoText.text = todoItem.text
             todoCheckBox.setOnCheckedChangeListener { _, isChecked ->
-                onChangeChecked(isChecked)
+                if (isLoaded) {
+                    todoCheckBox.isChecked = !isChecked
+                }
+            }
+            todoCheckBox.setOnClickListener {
+                onChangeChecked(!todoItem.isCompleted)
             }
             todoCheckBox.isChecked = todoItem.isCompleted
             onChangeChecked(todoItem.isCompleted)
@@ -182,16 +187,4 @@ class TodoListAdapter(
             }
         }
     }
-}
-interface ItemChanger {
-    fun updateItem(todoItem: TodoItem, toTop: Boolean)
-    fun deleteItem(id: String)
-}
-interface SelectedCallback{
-    fun onSelect(todoItem: TodoItem)
-    fun onSwipeStart()
-    fun onSwipeFinish()
-}
-interface CounterCallback{
-    fun onCount(count:Int)
 }

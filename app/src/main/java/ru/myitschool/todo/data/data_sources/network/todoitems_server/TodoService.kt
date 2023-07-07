@@ -15,38 +15,31 @@ import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.To
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemResponse
 
 interface TodoService {
-    companion object{
-        const val BASE_URL = "https://beta.mrdekk.ru/todobackend/"
-    }
     @GET("list")
-    suspend fun loadList(@Header("Authorization") auth:String,): Response<TodoItemListResponse>
+    suspend fun loadList(): Response<TodoItemListResponse>
 
     @GET("list/{id}")
-    suspend fun loadTodoItem(@Header("Authorization") auth:String,
+    suspend fun loadTodoItem(
         @Path("id") id: String
     ): Response<TodoItemResponse>
 
     @DELETE("list/{id}")
-    suspend fun deleteTodoItem(@Header("Authorization") auth:String,
-        @Header("X-Last-Known-Revision") revision:Int,
+    suspend fun deleteTodoItem(
         @Path("id") id: String
     ): Response<TodoItemResponse>
 
     @POST("list")
-    suspend fun addTodoItem(@Header("Authorization") auth:String,
-                            @Header("X-Last-Known-Revision") revision:Int,
+    suspend fun addTodoItem(
                             @Body todoItem: TodoItemRequest
     ): Response<TodoItemResponse>
 
     @PUT("list/{id}")
-    suspend fun changeTodoItem(@Header("Authorization") auth:String,
-                               @Header("X-Last-Known-Revision") revision:Int,
+    suspend fun changeTodoItem(
                                @Path("id")id:String,
                                @Body todoItem: TodoItemRequest
     ):Response<TodoItemResponse>
     @PATCH("list")
-    suspend fun updateList(@Header("Authorization") auth:String,
-        @Header("X-Last-Known-Revision") revision: Int,
+    suspend fun updateList(
         @Body itemsList: TodoItemListRequest
     ):Response<TodoItemListResponse>
 }

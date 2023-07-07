@@ -6,7 +6,6 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import ru.myitschool.todo.R
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -66,7 +65,6 @@ class ItemTouchHelperCallback(
             drawable?.draw(c)
         } else if (dX < 0) {
             val paint = Paint()
-            println(dX)
             paint.color = view.resources.getColor(R.color.red, view.context.theme)
             c.drawRect(
                 view.right + dX, view.top.toFloat(),

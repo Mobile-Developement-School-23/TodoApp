@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.repository.SharedPreferencesRepository
 import ru.myitschool.todo.data.repository.TodoItemsRepository
 import ru.myitschool.todo.data.repository.YandexPassportRepository
+import ru.myitschool.todo.utils.Constants
 import javax.inject.Inject
 
 class SettingsViewModel @Inject constructor(
@@ -36,26 +37,26 @@ class SettingsViewModel @Inject constructor(
         val newToken = "OAuth ${token.value}"
         sharedPreferencesRepository.setAuthToken(newToken)
         _token.value = newToken
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.login(newToken)
+        viewModelScope.launch {
+            sharedPreferencesRepository.setAuthToken(newToken)
             repository.loadAllItems()
         }
         getInfo()
     }
     fun logout(){
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.logout()
-            repository.loadAllItems {
+        viewModelScope.launch {
+            sharedPreferencesRepository.setAuthToken(Constants.DEFAULT_TOKEN)
+            repository.loadAllItems().onSuccess{
                 if (it){
                     _token.value = ""
                     _accountInfo.value = ""
-                    sharedPreferencesRepository.setAuthToken("")
+                    sharedPreferencesRepository.setAuthToken(Constants.DEFAULT_TOKEN)
                     launch (Dispatchers.IO){
                         _error.send(false)
                     }
                 }
                 else{
-                    repository.login(_token.value)
+                    sharedPreferencesRepository.setAuthToken(_token.value)
                     launch (Dispatchers.IO){
                         _error.send(true)
                     }
@@ -64,7 +65,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
     private fun getInfo(){
-        viewModelScope.launch (Dispatchers.IO){
+        viewModelScope.launch{
             val value = yandexPassportRepository.getInfo()?.login
             _accountInfo.value = value
         }
@@ -73,7 +74,7 @@ class SettingsViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         if (_token.value.isNotEmpty()){
-            repository.login(_token.value)
+            sharedPreferencesRepository.setAuthToken(_token.value)
         }
     }
 }

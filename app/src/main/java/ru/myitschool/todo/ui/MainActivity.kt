@@ -1,4 +1,4 @@
-package ru.myitschool.todo
+package ru.myitschool.todo.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

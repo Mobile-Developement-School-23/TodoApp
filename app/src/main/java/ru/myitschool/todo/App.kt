@@ -7,6 +7,7 @@ import androidx.work.WorkManager
 import ru.myitschool.todo.data.repository.SharedPreferencesRepository
 import ru.myitschool.todo.di.AppComponent
 import ru.myitschool.todo.di.DaggerAppComponent
+import ru.myitschool.todo.utils.NetworkListener
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -14,6 +15,8 @@ class App: Application() {
     private lateinit var appComponent: AppComponent
     @Inject
     lateinit var sharedRepository: SharedPreferencesRepository
+    @Inject
+    lateinit var networkListener: NetworkListener
 
     override fun onCreate() {
         super.onCreate()
@@ -21,6 +24,7 @@ class App: Application() {
         appComponent.inject(this)
         registerWorker()
         setTheme()
+        networkListener.startListener()
     }
     fun getAppComponent() = appComponent
 
