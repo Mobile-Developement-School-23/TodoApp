@@ -16,4 +16,11 @@
     <string name="delete">Удалить</string>
     <string name="info">Информация</string>
     <string name="blank">Пусто</string>
+    <string name="light">Светлая</string>
+    <string name="dark">Темная</string>
+    <string name="system">Системная</string>
+    <string name="retry">Повторить</string>
+    <string name="no_connection">Нет подключения</string>
+    <string name="logout">Выйти</string>
+    <string name="login_with_yandex">Войти с Яндекс ID</string>
 </resources>

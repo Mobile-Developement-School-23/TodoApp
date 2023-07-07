@@ -7,16 +7,28 @@
 
     <fragment
         android:id="@+id/additionFragment"
-        android:name="ru.myitschool.todo.ui.AdditionFragment.view.AdditionFragment"
+        android:name="ru.myitschool.todo.ui.addition_fragment.AdditionFragment"
         android:label="fragment_addition"
         tools:layout="@layout/fragment_addition" />
     <fragment
         android:id="@+id/todoListFragment"
-        android:name="ru.myitschool.todo.ui.TodoListFragment.view.TodoListFragment"
+        android:name="ru.myitschool.todo.ui.todo_list_fragment.TodoListFragment"
         android:label="fragment_todo_list"
         tools:layout="@layout/fragment_todo_list" >
         <action
             android:id="@+id/action_todoListFragment_to_additionFragment"
-            app:destination="@id/additionFragment" />
+            app:destination="@id/additionFragment"
+            app:enterAnim="@anim/enter_left"
+            app:exitAnim="@anim/exit_left"
+            app:popEnterAnim="@anim/enter_right"
+            app:popExitAnim="@anim/exit_right" />
+        <action
+            android:id="@+id/action_todoListFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="ru.myitschool.todo.ui.settings_fragment.view.SettingsFragment"
+        android:label="fragment_settings"
+        tools:layout="@layout/fragment_settings" />
 </navigation>

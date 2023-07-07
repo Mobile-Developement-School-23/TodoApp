@@ -1,9 +1,13 @@
 package ru.myitschool.todo
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import ru.myitschool.todo.data.repository.SharedPreferencesRepository
 import ru.myitschool.todo.databinding.ActivityMainBinding
-import ru.myitschool.todo.databinding.FragmentTodoListBinding
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
     private var _binding: ActivityMainBinding? = null

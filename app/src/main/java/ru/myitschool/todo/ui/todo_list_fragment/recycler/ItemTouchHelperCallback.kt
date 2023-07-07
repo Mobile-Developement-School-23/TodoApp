@@ -1,9 +1,7 @@
-package ru.myitschool.todo.ui.TodoListFragment.view.recycler
+package ru.myitschool.todo.ui.todo_list_fragment.recycler
 
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -36,6 +34,11 @@ class ItemTouchHelperCallback(
         }
     }
 
+    override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+        super.onSelectedChanged(viewHolder, actionState)
+        adapter.onItemSelected(actionState)
+    }
+
     override fun onChildDraw(
         c: Canvas,
         recyclerView: RecyclerView,
@@ -46,27 +49,25 @@ class ItemTouchHelperCallback(
         isCurrentlyActive: Boolean
     ) {
         val view = viewHolder.itemView
-        if (abs(dX) > view.width / 1.2) {
-            return
-        }
         if (dX > 0) {
             val paint = Paint()
-            paint.color = Color.parseColor("#00FF00")
+            paint.color = view.resources.getColor(R.color.green, view.context.theme)
             c.drawRect(view.left.toFloat(), view.top.toFloat(), dX, view.bottom.toFloat(), paint)
             val drawable = ResourcesCompat.getDrawable(
                 view.resources,
                 R.drawable.ic_check, view.context.theme
             )
             drawable?.setBounds(
-                min(view.left+view.height / 3, (view.left + dX).toInt()),
+                min(view.left+view.height / 3, (view.left+dX-view.height / 3).toInt()),
                 view.top + view.height / 3,
-                view.left+view.height / 3 * 2,
+                min(view.left+view.height / 3 * 2, (view.left+dX).toInt()),
                 view.bottom - view.height / 3
             )
             drawable?.draw(c)
         } else if (dX < 0) {
             val paint = Paint()
-            paint.color = Color.parseColor("#FF0000")
+            println(dX)
+            paint.color = view.resources.getColor(R.color.red, view.context.theme)
             c.drawRect(
                 view.right + dX, view.top.toFloat(),
                 view.right.toFloat(), view.bottom.toFloat(), paint
@@ -78,12 +79,16 @@ class ItemTouchHelperCallback(
             drawable?.setBounds(
                 max(view.right - view.height / 3 * 2, (view.right + dX).toInt()),
                 view.top + view.height / 3,
-                view.right - view.height / 3,
+                max(view.right - view.height / 3, (view.right+dX+view.height / 3).toInt()),
                 view.bottom - view.height / 3
             )
             drawable?.draw(c)
         }
-//        drawable?.draw(c)
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }
+}
+interface ItemTouchHelperAdapter {
+    fun onItemDismiss(position:Int)
+    fun onItemChecked(position: Int)
+    fun onItemSelected(actionState:Int)
 }

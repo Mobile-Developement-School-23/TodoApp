@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="?attr/fullscreenBackgroundColor"
     android:theme="@style/ThemeOverlay.ToDo.FullscreenContainer"
-    tools:context=".ui.AdditionFragment.view.AdditionFragment">
+    tools:context=".ui.addition_fragment.AdditionFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -20,13 +20,13 @@
 
             <ImageView
                 android:id="@+id/close"
-                android:layout_width="24dp"
+                android:layout_width="wrap_content"
                 android:background="?android:selectableItemBackgroundBorderless"
-                android:layout_height="24dp"
-                android:padding="4dp"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
                 android:layout_gravity="start|top"
-                android:layout_marginStart="21dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="4dp"
                 android:contentDescription="@string/close"
                 android:src="@drawable/ic_close"
                 app:layout_constraintStart_toStartOf="parent"

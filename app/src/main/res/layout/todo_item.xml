@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/todo_item_ripple">
+    android:background="?attr/colorOnPrimary"
+    android:foreground="@drawable/todo_item_ripple">
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/todo_checkbox"

@@ -18,6 +18,8 @@
         <item name="separatorColor">@color/gray</item>
         <item name="infoButtonColor">@color/gray_button_light</item>
         <item name="checkBoxInactiveColor">@color/black_overlay</item>
+        <item name="android:windowAnimationStyle">@style/WindowChangeThemeStyle</item>
+        <item name="connectionErrorColor">#FAEBD7</item>
     </style>
     <style name="ThemeOverlay.ToDo.FullscreenContainer" parent="">
         <item name="fullscreenBackgroundColor">@color/beige</item>

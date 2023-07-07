@@ -27,5 +27,4 @@ class CommonCallbackImpl<T>(
         val newItem = newItems[newItemPosition]
         return areContentsTeSameImpl(oldItem, newItem)
     }
-
 }
