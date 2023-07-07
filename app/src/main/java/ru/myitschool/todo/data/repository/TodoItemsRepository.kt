@@ -10,14 +10,19 @@ import ru.myitschool.todo.data.data_sources.network.todoitems_server.TodoService
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.data_mappers.TodoNetworkMapper
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemListRequest
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemRequest
+import ru.myitschool.todo.data.data_sources.room.dao.TodoAddDao
 import ru.myitschool.todo.data.data_sources.room.dao.TodoDao
+import ru.myitschool.todo.data.data_sources.room.dao.TodoDeleteDao
 import ru.myitschool.todo.data.data_sources.room.data_mappers.ImportanceMapper
 import ru.myitschool.todo.data.data_sources.room.data_mappers.TodoMapper
 import ru.myitschool.todo.data.data_sources.room.database.AppDatabase
+import ru.myitschool.todo.data.data_sources.room.entities.TodoAddEntity
+import ru.myitschool.todo.data.data_sources.room.entities.TodoDeleteEntity
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.di.AppScope
 import ru.myitschool.todo.utils.NetworkStateMonitor
+import java.lang.NullPointerException
 import java.util.Date
 import javax.inject.Inject
 
@@ -29,6 +34,12 @@ class TodoItemsRepository @Inject constructor(
 ) {
     private val todoDao: TodoDao by lazy {
         database.todoDao()
+    }
+    private val addDao: TodoAddDao by lazy {
+        database.addDao()
+    }
+    private val deleteDao: TodoDeleteDao by lazy {
+        database.deleteDao()
     }
     val todoItems: Flow<List<TodoItem>> =
         todoDao.loadAllTodoItems().map { list -> list.map { TodoMapper.entityToModel(it) } }
@@ -62,6 +73,7 @@ class TodoItemsRepository @Inject constructor(
                     return@runCatching false
                 }
             }
+            addDao.addTodo(TodoAddEntity(todoItem.id))
             return@withContext Result.failure(Exception())
         }
 
@@ -111,6 +123,7 @@ class TodoItemsRepository @Inject constructor(
 
     suspend fun deleteItem(id: String): Result<Boolean> = withContext(Dispatchers.IO) {
         todoDao.deleteById(id)
+        addDao.deleteById(id)
         if (isConnected) {
             return@withContext runCatching {
                 val response =
@@ -122,10 +135,11 @@ class TodoItemsRepository @Inject constructor(
                 return@runCatching true
             }
         }
+        deleteDao.addDeleteItem(TodoDeleteEntity(id, Date().time))
         Result.failure(Exception())
     }
 
-    suspend fun loadAllItems():Result<Boolean> = withContext(Dispatchers.IO){
+    suspend fun loadAllItems(): Result<Boolean> = withContext(Dispatchers.IO) {
         if (isConnected) {
             return@withContext runCatching {
                 val response = todoService.loadList()
@@ -138,12 +152,10 @@ class TodoItemsRepository @Inject constructor(
                             )
                         })
                         return@runCatching true
-                    } else {
-                        throw Exception("Body null error")
                     }
-                } else {
-                    throw Exception(response.errorBody()?.string())
+                    throw NullPointerException("Result is null")
                 }
+                throw Exception(response.errorBody()?.string())
             }
         }
         return@withContext Result.failure(Exception("Connection error"))
@@ -152,14 +164,14 @@ class TodoItemsRepository @Inject constructor(
     suspend fun getAllItems(): Result<List<TodoItem>> =
         Result.success(todoDao.loadAllTodoItemsAsync().map { TodoMapper.entityToModel(it) })
 
-    suspend fun updateItems():Result<Boolean> = withContext(Dispatchers.IO){
+    suspend fun updateItems(): Result<Boolean> = withContext(Dispatchers.IO) {
         if (isConnected) {
-            return@withContext runCatching<Boolean>{
+            return@withContext runCatching<Boolean> {
                 val response = todoService.loadList()
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null) {
-                        var savedItems:List<TodoItem> = listOf()
+                        var savedItems: List<TodoItem> = listOf()
                         getAllItems().onSuccess {
                             savedItems = it
                         }.onFailure {
@@ -167,27 +179,30 @@ class TodoItemsRepository @Inject constructor(
                         }
                         val loadedItems = body.list.toMutableList()
                         val isSimilar =
-                            loadedItems.map { TodoNetworkMapper.entityToModel(it) }.toSet() == savedItems.toSet()
+                            loadedItems.map { TodoNetworkMapper.entityToModel(it) }
+                                .toSet() == savedItems.toSet()
                         if (isSimilar) {
                             return@runCatching true
                         }
+                        val deletedItems = deleteDao.getAll()
+                        val addedItems = addDao.getAll()
                         for (i in savedItems) { //Тут должна быть рабочая синхронизация, но удаление чет пошло по ж***
-                            if (loadedItems.all { it.id != i.id }) {
-                                loadedItems.add(TodoNetworkMapper.modelToEntity(i))
-                            } else {
-                                val index = loadedItems.indexOfFirst { it.id == i.id }
-                                if (index != -1) {
-                                    loadedItems[index] = TodoNetworkMapper.modelToEntity(i)
+                            val index = loadedItems.indexOfFirst { it.id == i.id }
+                            if (index != -1) {
+                                loadedItems[index] = TodoNetworkMapper.modelToEntity(i)
+                            }
+                            else{
+                                if (addedItems.any { it.id == i.id}){
+                                    loadedItems.add(TodoNetworkMapper.modelToEntity(i))
                                 }
                             }
                         }
-                        todoDao.rewriteTable(body.list.map {
-                            TodoMapper.modelToEntity(
-                                TodoNetworkMapper.entityToModel(
-                                    it
-                                )
-                            )
-                        })
+                        for (i in deletedItems) {
+                            val index = loadedItems.indexOfFirst { it.id == i.id }
+                            if (index != -1) {
+                                loadedItems.removeAt(index)
+                            }
+                        }
                         val updateResponse = todoService.updateList(
                             TodoItemListRequest(loadedItems)
                         )
@@ -204,6 +219,8 @@ class TodoItemsRepository @Inject constructor(
                                     }
                                 )
                             }
+                            deleteDao.deleteAll()
+                            addDao.deleteAll()
                             return@runCatching true
                         }
                         throw Exception("Connection error")
