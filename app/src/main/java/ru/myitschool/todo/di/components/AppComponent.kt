@@ -6,13 +6,14 @@ import dagger.Component
 import ru.myitschool.todo.App
 import ru.myitschool.todo.NetworkWorker
 import ru.myitschool.todo.di.modules.NetworkModule
+import ru.myitschool.todo.di.modules.RepositoryModule
 import ru.myitschool.todo.di.scopes.AppScope
 import ru.myitschool.todo.ui.MainActivity
 import ru.myitschool.todo.ui.addition_fragment.AdditionViewModel
 import ru.myitschool.todo.ui.settings_fragment.view.SettingsViewModel
 import ru.myitschool.todo.ui.todo_list_fragment.TodoListViewModel
 
-@Component(modules = [NetworkModule::class])
+@Component(modules = [NetworkModule::class, RepositoryModule::class])
 @AppScope
 interface AppComponent {
     @Component.Factory

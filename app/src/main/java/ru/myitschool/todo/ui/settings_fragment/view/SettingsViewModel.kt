@@ -13,6 +13,9 @@ import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.repository.SharedPreferencesRepository
 import ru.myitschool.todo.data.repository.TodoItemsRepository
 import ru.myitschool.todo.data.repository.YandexPassportRepository
+import ru.myitschool.todo.data.repository.impl.SharedPreferencesRepositoryImpl
+import ru.myitschool.todo.data.repository.impl.TodoItemsRepositoryImpl
+import ru.myitschool.todo.data.repository.impl.YandexPassportRepositoryImpl
 import ru.myitschool.todo.utils.Constants
 import javax.inject.Inject
 

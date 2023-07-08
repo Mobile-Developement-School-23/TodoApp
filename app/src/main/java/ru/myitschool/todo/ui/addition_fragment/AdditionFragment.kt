@@ -25,7 +25,6 @@ import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.databinding.FragmentAdditionBinding
 import ru.myitschool.todo.ui.ViewModelFactory
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 class AdditionFragment : Fragment() {

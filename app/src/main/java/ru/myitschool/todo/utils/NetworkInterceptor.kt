@@ -5,7 +5,7 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import ru.myitschool.todo.data.repository.SharedPreferencesRepository
-import ru.myitschool.todo.di.scopes.AppScope
+import ru.myitschool.todo.data.repository.impl.SharedPreferencesRepositoryImpl
 import javax.inject.Inject
 
 class NetworkInterceptor @Inject constructor(val repository: SharedPreferencesRepository):Interceptor {

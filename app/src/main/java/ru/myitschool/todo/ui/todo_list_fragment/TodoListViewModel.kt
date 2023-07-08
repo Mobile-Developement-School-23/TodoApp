@@ -2,7 +2,6 @@ package ru.myitschool.todo.ui.todo_list_fragment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -34,7 +33,7 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
 
     init {
         viewModelScope.launch {
-            repository.todoItems.collect {
+            repository.getItemsFlow().collect {
                 setFilterValue(filterValue.value)
             }
         }

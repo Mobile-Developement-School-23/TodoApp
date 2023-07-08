@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import ru.myitschool.todo.data.repository.SharedPreferencesRepository
+import ru.myitschool.todo.data.repository.impl.SharedPreferencesRepositoryImpl
 import ru.myitschool.todo.di.components.AppComponent
 import ru.myitschool.todo.di.components.DaggerAppComponent
 import ru.myitschool.todo.utils.NetworkListener
@@ -14,7 +14,7 @@ import javax.inject.Inject
 class App: Application() {
     private lateinit var appComponent: AppComponent
     @Inject
-    lateinit var sharedRepository: SharedPreferencesRepository
+    lateinit var sharedRepository: SharedPreferencesRepositoryImpl
     @Inject
     lateinit var networkListener: NetworkListener
 
