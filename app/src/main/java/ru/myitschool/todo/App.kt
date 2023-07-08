@@ -7,6 +7,7 @@ import androidx.work.WorkManager
 import ru.myitschool.todo.data.repository.impl.SharedPreferencesRepositoryImpl
 import ru.myitschool.todo.di.components.AppComponent
 import ru.myitschool.todo.di.components.DaggerAppComponent
+import ru.myitschool.todo.utils.Constants
 import ru.myitschool.todo.utils.NetworkListener
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -34,13 +35,13 @@ class App: Application() {
     }
     private fun setTheme(){
         when(sharedRepository.getTheme()){
-            0->{
+            Constants.LIGHT_THEME->{
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             }
-            1->{
+            Constants.DARK_THEME->{
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             }
-            2->{
+            Constants.SYSTEM_THEME->{
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             }
         }

@@ -95,18 +95,15 @@ class SettingsFragment : Fragment() {
         binding.themeSelector.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.light_theme_button -> {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    sharedRepository.setTheme(0)
+                    viewModel.setTheme(Constants.LIGHT_THEME)
                 }
 
                 R.id.dark_theme_button -> {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    sharedRepository.setTheme(1)
+                    viewModel.setTheme(Constants.DARK_THEME)
                 }
 
                 R.id.system_theme_button -> {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                    sharedRepository.setTheme(2)
+                    viewModel.setTheme(Constants.SYSTEM_THEME)
                 }
             }
         }
@@ -145,6 +142,23 @@ class SettingsFragment : Fragment() {
                             resources.getString(R.string.no_connection),
                             Snackbar.LENGTH_SHORT
                         ).show()
+                    }
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.theme.collect{
+                    when(it){
+                        Constants.LIGHT_THEME->{
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                        }
+                        Constants.DARK_THEME->{
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                        }
+                        Constants.SYSTEM_THEME->{
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                        }
                     }
                 }
             }
