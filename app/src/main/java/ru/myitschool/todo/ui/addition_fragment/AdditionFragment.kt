@@ -36,7 +36,7 @@ class AdditionFragment : Fragment() {
     }
     private val viewModel: AdditionViewModel by viewModels{
         ViewModelFactory{
-            (requireActivity().application as App).getAppComponent().additionViewModel()
+            (requireActivity().application as App).getAppComponent().additionFragmentComponent().additionViewModel()
         }
     }
     private val errorToast: Toast by lazy {

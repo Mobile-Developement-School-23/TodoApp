@@ -22,6 +22,7 @@ import ru.myitschool.todo.App
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.databinding.FragmentTodoListBinding
+import ru.myitschool.todo.di.components.TodolistFragmentComponent
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.CounterCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.SelectedCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoListAdapter
@@ -42,9 +43,12 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
+    private val component:TodolistFragmentComponent by lazy {
+        (requireActivity().application as App).getAppComponent().todolistFragmentComponentFactory().create(this)
+    }
     private val viewModel: TodoListViewModel by viewModels {
         ViewModelFactory {
-            (requireActivity().application as App).getAppComponent().todoListViewModel()
+            component.todoListViewModel()
         }
     }
 
@@ -69,8 +73,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (requireActivity().application as App).getAppComponent().todolistFragmentComponentFactory().create(this)
-            .inject(this)
+        component.inject(this)
         fabPosition = binding.addCase.translationY
         binding.appBar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             if (-verticalOffset == appBarLayout.totalScrollRange) {

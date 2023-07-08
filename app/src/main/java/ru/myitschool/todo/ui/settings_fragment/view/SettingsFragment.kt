@@ -44,7 +44,7 @@ class SettingsFragment : Fragment() {
     }
     private val viewModel: SettingsViewModel by viewModels {
         ViewModelFactory {
-            appComponent.settingViewModel()
+            appComponent.settingsFragmentComponent().settingViewModel()
         }
     }
 

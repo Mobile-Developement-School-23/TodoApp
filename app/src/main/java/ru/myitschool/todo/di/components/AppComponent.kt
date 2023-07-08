@@ -16,17 +16,16 @@ import ru.myitschool.todo.ui.todo_list_fragment.TodoListViewModel
 @AppScope
 interface AppComponent {
     @Component.Factory
-    interface Factory{
+    interface Factory {
         fun create(
-            @BindsInstance context:Context
+            @BindsInstance context: Context
         ): AppComponent
     }
+
     fun todolistFragmentComponentFactory(): TodolistFragmentComponent.Factory
     fun settingsFragmentComponent(): SettingsFragmentComponent
-    fun todoListViewModel(): TodoListViewModel
-    fun additionViewModel(): AdditionViewModel
-    fun settingViewModel(): SettingsViewModel
+    fun additionFragmentComponent(): AdditionFragmentComponent
     fun inject(worker: NetworkWorker)
-    fun inject(app:App)
+    fun inject(app: App)
     fun inject(activity: MainActivity)
 }
