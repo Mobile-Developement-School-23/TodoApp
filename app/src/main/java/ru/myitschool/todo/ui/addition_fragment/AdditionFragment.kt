@@ -58,6 +58,7 @@ class AdditionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         observeViewModel()
+        binding.deleteButton.isEnabled = false
         binding.todoEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int){}
 
@@ -81,7 +82,7 @@ class AdditionFragment : Fragment() {
         }
         binding.save.setOnClickListener {
             if (!binding.close.isEnabled){
-                Snackbar.make(binding.deleteButton, "Saving", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.deleteButton, resources.getString(R.string.save), Snackbar.LENGTH_SHORT).show()
             }
             if (binding.todoEditText.text.isEmpty()) {
                 errorToast.show()
@@ -201,6 +202,7 @@ class AdditionFragment : Fragment() {
     }
 
     private fun enableDeleteButton() {
+        binding.deleteButton.isEnabled = true
         binding.deleteTextview.setTextColor(
             resources.getColor(
                 R.color.red,

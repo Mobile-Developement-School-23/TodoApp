@@ -5,8 +5,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import ru.myitschool.todo.data.repository.SharedPreferencesRepository
-import ru.myitschool.todo.di.AppComponent
-import ru.myitschool.todo.di.DaggerAppComponent
+import ru.myitschool.todo.di.components.AppComponent
+import ru.myitschool.todo.di.components.DaggerAppComponent
 import ru.myitschool.todo.utils.NetworkListener
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject

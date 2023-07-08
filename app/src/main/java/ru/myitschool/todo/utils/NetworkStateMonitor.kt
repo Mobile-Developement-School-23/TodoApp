@@ -6,7 +6,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import ru.myitschool.todo.di.AppScope
+import ru.myitschool.todo.di.scopes.AppScope
 import javax.inject.Inject
 
 @AppScope

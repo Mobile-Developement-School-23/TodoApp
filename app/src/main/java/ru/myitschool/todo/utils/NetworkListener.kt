@@ -5,7 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.repository.TodoItemsRepository
-import ru.myitschool.todo.di.AppScope
+import ru.myitschool.todo.di.scopes.AppScope
 import javax.inject.Inject
 
 @AppScope

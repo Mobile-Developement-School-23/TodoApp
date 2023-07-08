@@ -27,6 +27,8 @@ import ru.myitschool.todo.ui.todo_list_fragment.recycler.SelectedCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoListAdapter
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperCallback
 import ru.myitschool.todo.ui.ViewModelFactory
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemChanger
+import javax.inject.Inject
 
 
 class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
@@ -45,9 +47,9 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             (requireActivity().application as App).getAppComponent().todoListViewModel()
         }
     }
-    private val adapter: TodoListAdapter by lazy {
-        TodoListAdapter(viewModel, this, this)
-    }
+
+    @Inject
+    lateinit var adapter: TodoListAdapter
     private var isHidden = false
     private var fabPosition: Float = 0F
     private var scrolled: Boolean = false
@@ -63,8 +65,12 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
 
     }
 
+    fun getItemChanger(): ItemChanger = viewModel
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        (requireActivity().application as App).getAppComponent().todolistFragmentComponentFactory().create(this)
+            .inject(this)
         fabPosition = binding.addCase.translationY
         binding.appBar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             if (-verticalOffset == appBarLayout.totalScrollRange) {
@@ -152,7 +158,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                                 adapter.submitList(it)
                                 if (adapter.adapterList.isNotEmpty()) {
                                     if (previousElement != adapter.adapterList[0]) {
-                                        delay(100)
+                                        delay(100) //Гига костыль
                                         binding.todoList.scrollToPosition(0)
                                     }
                                 }

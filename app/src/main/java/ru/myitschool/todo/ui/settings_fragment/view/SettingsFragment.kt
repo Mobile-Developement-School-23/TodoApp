@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.snackbar.Snackbar
 import com.yandex.authsdk.YandexAuthLoginOptions
-import com.yandex.authsdk.YandexAuthOptions
 import com.yandex.authsdk.YandexAuthSdk
 import com.yandex.authsdk.YandexAuthToken
 import com.yandex.authsdk.internal.strategy.LoginType
@@ -27,6 +26,7 @@ import ru.myitschool.todo.App
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.repository.SharedPreferencesRepository
 import ru.myitschool.todo.databinding.FragmentSettingsBinding
+import ru.myitschool.todo.di.components.AppComponent
 import ru.myitschool.todo.ui.ViewModelFactory
 import ru.myitschool.todo.utils.Constants
 import javax.inject.Inject
@@ -39,15 +39,17 @@ class SettingsFragment : Fragment() {
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
-    private val sdk: YandexAuthSdk by lazy {
-        YandexAuthSdk(requireContext(), YandexAuthOptions(requireContext()))
+    private val appComponent: AppComponent by lazy {
+        (requireActivity().application as App).getAppComponent()
     }
     private val viewModel: SettingsViewModel by viewModels {
         ViewModelFactory {
-            (requireActivity().application as App).getAppComponent().settingViewModel()
+            appComponent.settingViewModel()
         }
     }
 
+    @Inject
+    lateinit var sdk: YandexAuthSdk
     @Inject
     lateinit var sharedRepository: SharedPreferencesRepository
 
@@ -61,7 +63,7 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (requireActivity().application as App).getAppComponent().inject(this)
+        appComponent.settingsFragmentComponent().inject(this)
         setupThemeButtons()
         binding.close.setOnClickListener {
             navController.popBackStack()

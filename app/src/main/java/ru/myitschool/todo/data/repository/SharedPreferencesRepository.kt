@@ -1,7 +1,7 @@
 package ru.myitschool.todo.data.repository
 
 import android.content.SharedPreferences
-import ru.myitschool.todo.di.AppScope
+import ru.myitschool.todo.di.scopes.AppScope
 import ru.myitschool.todo.utils.Constants
 import javax.inject.Inject
 

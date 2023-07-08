@@ -3,7 +3,6 @@ package ru.myitschool.todo.data.data_sources.room.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(tableName = "todo_delete")
 data class TodoDeleteEntity(

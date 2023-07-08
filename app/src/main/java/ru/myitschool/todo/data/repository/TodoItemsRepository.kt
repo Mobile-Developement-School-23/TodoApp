@@ -20,9 +20,12 @@ import ru.myitschool.todo.data.data_sources.room.entities.TodoAddEntity
 import ru.myitschool.todo.data.data_sources.room.entities.TodoDeleteEntity
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
-import ru.myitschool.todo.di.AppScope
+import ru.myitschool.todo.di.scopes.AppScope
 import ru.myitschool.todo.utils.NetworkStateMonitor
+import ru.myitschool.todo.utils.exceptions.BadRequestException
+import ru.myitschool.todo.utils.exceptions.NotFoundException
 import java.lang.NullPointerException
+import java.net.ConnectException
 import java.util.Date
 import javax.inject.Inject
 
@@ -54,6 +57,8 @@ class TodoItemsRepository @Inject constructor(
             }
         }
     }
+    private val connectException = ConnectException("Connection error")
+    private val badRequestException = BadRequestException()
 
 
     suspend fun addItem(todoItem: TodoItem): Result<Boolean> =
@@ -74,13 +79,13 @@ class TodoItemsRepository @Inject constructor(
                 }
             }
             addDao.addTodo(TodoAddEntity(todoItem.id))
-            return@withContext Result.failure(Exception())
+            return@withContext Result.failure(connectException)
         }
 
     suspend fun getItemById(id: String): Result<TodoItem?> {
         val todoItemEntity = todoDao.loadTodoItemById(id)
         return if (todoItemEntity == null) {
-            Result.failure(Exception())
+            Result.failure(NotFoundException())
         } else {
             Result.success(TodoMapper.entityToModel(todoItemEntity))
         }
@@ -103,12 +108,12 @@ class TodoItemsRepository @Inject constructor(
                     )
                     if (!response.isSuccessful) {
                         updateItems()
-                        return@runCatching false
+                        throw badRequestException
                     }
                     return@runCatching true
                 }
             }
-            return@withContext Result.failure(Exception())
+            return@withContext Result.failure(connectException)
         }
 
     suspend fun getItemsByPriority(priority: Priority): Result<List<TodoItem>> =
@@ -136,7 +141,7 @@ class TodoItemsRepository @Inject constructor(
             }
         }
         deleteDao.addDeleteItem(TodoDeleteEntity(id, Date().time))
-        Result.failure(Exception())
+        Result.failure(connectException)
     }
 
     suspend fun loadAllItems(): Result<Boolean> = withContext(Dispatchers.IO) {
@@ -153,12 +158,12 @@ class TodoItemsRepository @Inject constructor(
                         })
                         return@runCatching true
                     }
-                    throw NullPointerException("Result is null")
+                    return@runCatching true
                 }
-                throw Exception(response.errorBody()?.string())
+                throw BadRequestException(response.errorBody()?.string().toString())
             }
         }
-        return@withContext Result.failure(Exception("Connection error"))
+        return@withContext Result.failure(connectException)
     }
 
     suspend fun getAllItems(): Result<List<TodoItem>> =
@@ -223,12 +228,12 @@ class TodoItemsRepository @Inject constructor(
                             addDao.deleteAll()
                             return@runCatching true
                         }
-                        throw Exception("Connection error")
+                        throw badRequestException
                     }
                 }
-                throw Exception("Connection error")
+                throw badRequestException
             }
         }
-        return@withContext Result.failure(Exception("Connection error"))
+        return@withContext Result.failure(connectException)
     }
 }

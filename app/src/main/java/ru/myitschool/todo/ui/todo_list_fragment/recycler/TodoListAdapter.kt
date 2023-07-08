@@ -17,9 +17,10 @@ import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import java.util.*
+import javax.inject.Inject
 
 
-class TodoListAdapter(
+class TodoListAdapter @Inject constructor(
     private val itemChanger: ItemChanger,
     private val selectedCallback: SelectedCallback,
     private val counterCallback: CounterCallback
