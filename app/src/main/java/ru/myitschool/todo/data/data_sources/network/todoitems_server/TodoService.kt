@@ -16,30 +16,30 @@ import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.To
 
 interface TodoService {
     @GET("list")
-    suspend fun loadList(): Response<TodoItemListResponse>
+    suspend fun loadList(): TodoItemListResponse
 
     @GET("list/{id}")
     suspend fun loadTodoItem(
         @Path("id") id: String
-    ): Response<TodoItemResponse>
+    ): TodoItemResponse
 
     @DELETE("list/{id}")
     suspend fun deleteTodoItem(
         @Path("id") id: String
-    ): Response<TodoItemResponse>
+    ): TodoItemResponse
 
     @POST("list")
     suspend fun addTodoItem(
                             @Body todoItem: TodoItemRequest
-    ): Response<TodoItemResponse>
+    ):TodoItemResponse
 
     @PUT("list/{id}")
     suspend fun changeTodoItem(
                                @Path("id")id:String,
                                @Body todoItem: TodoItemRequest
-    ):Response<TodoItemResponse>
+    ):TodoItemResponse
     @PATCH("list")
     suspend fun updateList(
         @Body itemsList: TodoItemListRequest
-    ):Response<TodoItemListResponse>
+    ):TodoItemListResponse
 }

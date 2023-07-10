@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.TodoService
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.data_mappers.TodoNetworkMapper
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemListRequest
+import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemNetworkEntity
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.entities.TodoItemRequest
 import ru.myitschool.todo.data.data_sources.room.dao.TodoAddDao
 import ru.myitschool.todo.data.data_sources.room.dao.TodoDao
@@ -18,6 +19,7 @@ import ru.myitschool.todo.data.data_sources.room.data_mappers.TodoMapper
 import ru.myitschool.todo.data.data_sources.room.database.AppDatabase
 import ru.myitschool.todo.data.data_sources.room.entities.TodoAddEntity
 import ru.myitschool.todo.data.data_sources.room.entities.TodoDeleteEntity
+import ru.myitschool.todo.data.data_sources.room.entities.TodoItemEntity
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.data.repository.TodoItemsRepository
@@ -26,6 +28,7 @@ import ru.myitschool.todo.utils.NetworkStateMonitor
 import ru.myitschool.todo.utils.exceptions.BadRequestException
 import ru.myitschool.todo.utils.exceptions.NotFoundException
 import java.net.ConnectException
+import java.net.UnknownHostException
 import java.util.Date
 import javax.inject.Inject
 
@@ -69,14 +72,17 @@ class TodoItemsRepositoryImpl @Inject constructor(
             val newItem = TodoNetworkMapper.modelToEntity(newTodoItem)
             val requestItem = TodoItemRequest(element = newItem)
             if (isConnected) {
-                return@withContext runCatching<Boolean> {
-                    val response =
-                        todoService.addTodoItem(requestItem)
-                    if (!response.isSuccessful) {
-                        updateItems()
-                        return@runCatching true
+                try {
+                    todoService.addTodoItem(requestItem)
+                    return@withContext Result.success(true)
+                } catch (e: UnknownHostException) {
+                    return@withContext Result.failure(e)
+                } catch (e: retrofit2.HttpException) {
+                    updateItems().onSuccess {
+                        return@withContext Result.success(it)
+                    }.onFailure {
+                        return@withContext Result.failure(it)
                     }
-                    return@runCatching false
                 }
             }
             addDao.addTodo(TodoAddEntity(todoItem.id))
@@ -102,16 +108,17 @@ class TodoItemsRepositoryImpl @Inject constructor(
             val newItem = TodoNetworkMapper.modelToEntity(newTodoItem)
             val requestItem = TodoItemRequest(element = newItem)
             if (isConnected) {
-                return@withContext runCatching {
-                    val response = todoService.changeTodoItem(
-                        newItem.id,
-                        requestItem
-                    )
-                    if (!response.isSuccessful) {
-                        updateItems()
-                        throw badRequestException
+                try {
+                    todoService.changeTodoItem(newItem.id, requestItem)
+                    return@withContext Result.success(true)
+                } catch (e: UnknownHostException) {
+                    return@withContext Result.failure(e)
+                } catch (e: retrofit2.HttpException) {
+                    updateItems().onSuccess {
+                        return@withContext Result.success(it)
+                    }.onFailure {
+                        return@withContext Result.failure(it)
                     }
-                    return@runCatching true
                 }
             }
             return@withContext Result.failure(connectException)
@@ -131,14 +138,17 @@ class TodoItemsRepositoryImpl @Inject constructor(
         todoDao.deleteById(id)
         addDao.deleteById(id)
         if (isConnected) {
-            return@withContext runCatching {
-                val response =
-                    todoService.deleteTodoItem(id)
-                if (!response.isSuccessful) {
-                    updateItems()
-                    return@runCatching false
+            try {
+                todoService.deleteTodoItem(id)
+                return@withContext Result.success(true)
+            } catch (e: UnknownHostException) {
+                return@withContext Result.failure(e)
+            } catch (e: retrofit2.HttpException) {
+                updateItems().onSuccess {
+                    return@withContext Result.success(it)
+                }.onFailure {
+                    return@withContext Result.failure(it)
                 }
-                return@runCatching true
             }
         }
         deleteDao.addDeleteItem(TodoDeleteEntity(id, Date().time))
@@ -147,20 +157,12 @@ class TodoItemsRepositoryImpl @Inject constructor(
 
     override suspend fun loadAllItems(): Result<Boolean> = withContext(Dispatchers.IO) {
         if (isConnected) {
-            return@withContext runCatching {
+            return@withContext runCatching<Boolean> {
                 val response = todoService.loadList()
-                if (response.isSuccessful) {
-                    val result = response.body()
-                    if (result != null) {
-                        todoDao.rewriteTable(result.list.map {
-                            TodoMapper.modelToEntity(
-                                TodoNetworkMapper.entityToModel(it)
-                            )
-                        })
-                    }
-                    return@runCatching true
-                }
-                throw BadRequestException(response.errorBody()?.string().toString())
+                todoDao.rewriteTable(response.list.map {
+                    TodoMapper.modelToEntity(TodoNetworkMapper.entityToModel(it))
+                })
+                return@runCatching true
             }
         }
         return@withContext Result.failure(connectException)
@@ -171,68 +173,55 @@ class TodoItemsRepositoryImpl @Inject constructor(
 
     override suspend fun updateItems(): Result<Boolean> = withContext(Dispatchers.IO) {
         if (isConnected) {
-            return@withContext runCatching<Boolean> {
+            return@withContext runCatching {
                 val response = todoService.loadList()
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        var savedItems: List<TodoItem> = listOf()
-                        getAllItems().onSuccess {
-                            savedItems = it
-                        }.onFailure {
-                            throw it
-                        }
-                        val loadedItems = body.list.toMutableList()
-                        val isSimilar =
-                            loadedItems.map { TodoNetworkMapper.entityToModel(it) }
-                                .toSet() == savedItems.toSet()
-                        if (isSimilar) {
-                            return@runCatching true
-                        }
-                        val deletedItems = deleteDao.getAll()
-                        val addedItems = addDao.getAll()
-                        for (i in savedItems) { //Тут должна быть рабочая синхронизация, но удаление чет пошло по ж***
-                            val index = loadedItems.indexOfFirst { it.id == i.id }
-                            if (index != -1) {
-                                loadedItems[index] = TodoNetworkMapper.modelToEntity(i)
-                            } else {
-                                if (addedItems.any { it.id == i.id }) {
-                                    loadedItems.add(TodoNetworkMapper.modelToEntity(i))
-                                }
-                            }
-                        }
-                        for (i in deletedItems) {
-                            val index = loadedItems.indexOfFirst { it.id == i.id }
-                            if (index != -1) {
-                                loadedItems.removeAt(index)
-                            }
-                        }
-                        val updateResponse = todoService.updateList(
-                            TodoItemListRequest(loadedItems)
-                        )
-                        if (updateResponse.isSuccessful) {
-                            val updateBody = updateResponse.body()
-                            if (updateBody != null) {
-                                todoDao.rewriteTable(
-                                    updateBody.list.map {
-                                        TodoMapper.modelToEntity(
-                                            TodoNetworkMapper.entityToModel(
-                                                it
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                            deleteDao.deleteAll()
-                            addDao.deleteAll()
-                            return@runCatching true
-                        }
-                        throw badRequestException
-                    }
+                var savedItems: List<TodoItem> = listOf()
+                getAllItems().onSuccess {
+                    savedItems = it
+                }.onFailure {
+                    throw it
                 }
-                throw badRequestException
+                val loadedItems = response.list.toMutableList()
+                val isSimilar =
+                    loadedItems.map { TodoNetworkMapper.entityToModel(it) }
+                        .toSet() == savedItems.toSet()
+                if (isSimilar) {
+                    return@runCatching true
+                }
+                val syncedItems = sync(savedItems, loadedItems, addDao.getAll(), deleteDao.getAll())
+                val updateResponse = todoService.updateList(
+                    TodoItemListRequest(syncedItems)
+                )
+                todoDao.rewriteTable(
+                    updateResponse.list.map {
+                        TodoMapper.modelToEntity(TodoNetworkMapper.entityToModel(it))
+                    }
+                )
+                return@runCatching true
             }
         }
         return@withContext Result.failure(connectException)
+    }
+    private fun sync(savedItems:List<TodoItem>,
+                     loadedItems:MutableList<TodoItemNetworkEntity>,
+                     addedItems:List<TodoAddEntity>,
+                     deletedItems:List<TodoDeleteEntity>):List<TodoItemNetworkEntity>{
+        for (i in savedItems) { //Тут должна быть рабочая синхронизация, но удаление чет пошло по ж***
+            val index = loadedItems.indexOfFirst { it.id == i.id }
+            if (index != -1) {
+                loadedItems[index] = TodoNetworkMapper.modelToEntity(i)
+            } else {
+                if (addedItems.any { it.id == i.id }) {
+                    loadedItems.add(TodoNetworkMapper.modelToEntity(i))
+                }
+            }
+        }
+        for (i in deletedItems) {
+            val index = loadedItems.indexOfFirst { it.id == i.id }
+            if (index != -1) {
+                loadedItems.removeAt(index)
+            }
+        }
+        return loadedItems
     }
 }

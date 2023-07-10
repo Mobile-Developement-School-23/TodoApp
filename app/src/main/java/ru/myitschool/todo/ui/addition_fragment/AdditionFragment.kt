@@ -33,9 +33,10 @@ class AdditionFragment : Fragment() {
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
-    private val viewModel: AdditionViewModel by viewModels{
-        ViewModelFactory{
-            (requireActivity().application as App).getAppComponent().additionFragmentComponent().additionViewModel()
+    private val viewModel: AdditionViewModel by viewModels {
+        ViewModelFactory {
+            (requireActivity().application as App).getAppComponent().additionFragmentComponent()
+                .additionViewModel()
         }
     }
     private val errorToast: Toast by lazy {
@@ -59,7 +60,7 @@ class AdditionFragment : Fragment() {
         observeViewModel()
         binding.deleteButton.isEnabled = false
         binding.todoEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int){}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
@@ -67,6 +68,20 @@ class AdditionFragment : Fragment() {
                 viewModel.setText(binding.todoEditText.text.toString())
             }
         })
+        setupDeadline()
+        binding.close.setOnClickListener {
+            navController.popBackStack()
+        }
+        setupSaveButton()
+        binding.priority.setOnClickListener {
+            showPopupMenu(binding.priorityText)
+        }
+        binding.deleteButton.setOnClickListener {
+            viewModel.deleteTodoItem()
+        }
+        recognizeScreen()
+    }
+    private fun setupDeadline(){
         binding.deadlineSwitcher.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (viewModel.deadlineDate.value == null) {
@@ -76,12 +91,15 @@ class AdditionFragment : Fragment() {
                 viewModel.setDeadline(null)
             }
         }
-        binding.close.setOnClickListener {
-            navController.popBackStack()
-        }
+    }
+    private fun setupSaveButton() {
         binding.save.setOnClickListener {
-            if (!binding.close.isEnabled){
-                Snackbar.make(binding.deleteButton, resources.getString(R.string.save), Snackbar.LENGTH_SHORT).show()
+            if (!binding.close.isEnabled) {
+                Snackbar.make(
+                    binding.deleteButton,
+                    resources.getString(R.string.save),
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
             if (binding.todoEditText.text.isEmpty()) {
                 errorToast.show()
@@ -96,19 +114,17 @@ class AdditionFragment : Fragment() {
                 }
             }
         }
-        binding.priority.setOnClickListener {
-            showPopupMenu(binding.priorityText)
-        }
-        binding.deleteButton.setOnClickListener {
-            viewModel.deleteTodoItem()
-        }
+    }
+
+    private fun recognizeScreen() {
         val id = arguments?.getString("id")
         if (id != null) {
             viewModel.loadTodoItem(id)
             enableDeleteButton()
         }
     }
-    private fun observeViewModel(){
+
+    private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.isDeleted.collect {
@@ -161,6 +177,7 @@ class AdditionFragment : Fragment() {
             }
         }
     }
+
     private fun showPopupMenu(v: View) {
         val popupMenu = PopupMenu(requireContext(), v)
         popupMenu.inflate(R.menu.priority_menu)
@@ -191,7 +208,7 @@ class AdditionFragment : Fragment() {
         val datePicker = DatePickerDialog(requireContext())
         datePicker.setOnDateSetListener { _, year, month, dayOfMonth ->
             val date = Calendar.getInstance()
-            date.set(year,month,dayOfMonth)
+            date.set(year, month, dayOfMonth)
             viewModel.setDeadline(date.time)
         }
         datePicker.setOnCancelListener {

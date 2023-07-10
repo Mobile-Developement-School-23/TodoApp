@@ -34,11 +34,26 @@ class TodoListAdapter @Inject constructor(
         }
 
     }
-    var adapterList = listOf<TodoItem>()
+    private var listener:OnCurrentListChangedListener = object : OnCurrentListChangedListener{
+        override fun <T> onCurrentListChanged(previous: MutableList<T>, current: MutableList<T>) {
+            TODO("Not yet implemented")
+        }
+    }
+
+    private var adapterList = listOf<TodoItem>()
     init {
         counterCallback.onCount(0)
     }
-
+    fun setOnCurrentListChangedListener(listener: OnCurrentListChangedListener){
+        this.listener = listener
+    }
+    override fun onCurrentListChanged(
+        previousList: MutableList<TodoItem>,
+        currentList: MutableList<TodoItem>
+    ) {
+        super.onCurrentListChanged(previousList, currentList)
+        listener.onCurrentListChanged(previousList, currentList)
+    }
     override fun submitList(list: List<TodoItem>?) {
         adapterList = list?: listOf()
         if (list != null){

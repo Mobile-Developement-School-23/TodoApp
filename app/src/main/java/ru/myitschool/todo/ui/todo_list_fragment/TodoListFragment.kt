@@ -1,7 +1,9 @@
 package ru.myitschool.todo.ui.todo_list_fragment
 
 import android.animation.ObjectAnimator
+import android.content.res.Resources
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +31,8 @@ import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoListAdapter
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperCallback
 import ru.myitschool.todo.ui.ViewModelFactory
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemChanger
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.OnCurrentListChangedListener
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoItemDecoration
 import javax.inject.Inject
 
 
@@ -43,8 +47,9 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
-    private val component:TodolistFragmentComponent by lazy {
-        (requireActivity().application as App).getAppComponent().todolistFragmentComponentFactory().create(this)
+    private val component: TodolistFragmentComponent by lazy {
+        (requireActivity().application as App).getAppComponent().todolistFragmentComponentFactory()
+            .create(this)
     }
     private val viewModel: TodoListViewModel by viewModels {
         ViewModelFactory {
@@ -142,6 +147,28 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         binding.todoList.setItemViewCacheSize(adapter.itemCount)
         binding.todoList.itemAnimator?.removeDuration = DELETE_ANIMATION_DURATION
         binding.todoList.adapter = adapter
+        binding.todoList.addItemDecoration(
+            TodoItemDecoration(
+                bottomOffset = 10f.toPx.toInt(),
+                leftOffset = 2f.toPx.toInt(),
+                rightOffset = 2f.toPx.toInt()
+            )
+        )
+        adapter.setOnCurrentListChangedListener(object : OnCurrentListChangedListener {
+            override fun <T> onCurrentListChanged(
+                previous: MutableList<T>,
+                current: MutableList<T>
+            ) {
+                if (previous.isNotEmpty()) {
+                    val previousElement = previous[0]
+                    if (current.isNotEmpty()) {
+                        if (previousElement != current[0]) {
+                            binding.todoList.scrollToPosition(0)
+                        }
+                    }
+                }
+            }
+        })
         binding.todoList.setOnScrollChangeListener { _, _, _, _, oldScrollY ->
             animateFAB(oldScrollY)
         }
@@ -155,17 +182,6 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                                 binding.emptyInfo.visibility = View.VISIBLE
                             } else {
                                 binding.emptyInfo.visibility = View.GONE
-                            }
-                            if (adapter.adapterList.isNotEmpty()) {
-                                val previousElement = adapter.adapterList[0]
-                                adapter.submitList(it)
-                                if (adapter.adapterList.isNotEmpty()) {
-                                    if (previousElement != adapter.adapterList[0]) {
-                                        delay(100) //Гига костыль
-                                        binding.todoList.scrollToPosition(0)
-                                    }
-                                }
-                                return@collect
                             }
                             adapter.submitList(it)
                         }
@@ -296,3 +312,10 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         }
     }
 }
+
+val Number.toPx
+    get() = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        this.toFloat(),
+        Resources.getSystem().displayMetrics
+    )

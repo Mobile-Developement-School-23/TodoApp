@@ -14,3 +14,7 @@ interface SelectedCallback{
 interface CounterCallback{
     fun onCount(count:Int)
 }
+
+interface OnCurrentListChangedListener{
+    fun <T>onCurrentListChanged(previous:MutableList<T>, current:MutableList<T>)
+}

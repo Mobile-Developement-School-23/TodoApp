@@ -15,7 +15,6 @@ class YandexPassportRepositoryImpl @Inject constructor(
         if (value != null) {
             return try {
                 val result = retrofitService.getInfo(value)
-                println(result)
                 result.body()
             } catch (_: Exception) {
                 null
