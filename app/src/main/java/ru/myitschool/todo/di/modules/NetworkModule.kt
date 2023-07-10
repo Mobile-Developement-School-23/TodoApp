@@ -46,11 +46,5 @@ interface NetworkModule {
         fun provideSharedPreferences(context: Context): SharedPreferences {
             return context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
         }
-
-        @AppScope
-        @Provides
-        fun provideRoomDatabase(context: Context): AppDatabase {
-            return Room.databaseBuilder(context, AppDatabase::class.java, "todo.db").build()
-        }
     }
 }

@@ -35,18 +35,11 @@ import javax.inject.Inject
 @AppScope
 class TodoItemsRepositoryImpl @Inject constructor(
     private val todoService: TodoService,
-    private val database: AppDatabase,
+    private val addDao: TodoAddDao,
+    private val todoDao: TodoDao,
+    private val deleteDao: TodoDeleteDao,
     private val networkStateMonitor: NetworkStateMonitor
 ) : TodoItemsRepository {
-    private val todoDao: TodoDao by lazy {
-        database.todoDao()
-    }
-    private val addDao: TodoAddDao by lazy {
-        database.addDao()
-    }
-    private val deleteDao: TodoDeleteDao by lazy {
-        database.deleteDao()
-    }
     private val todoItems: Flow<List<TodoItem>> =
         todoDao.loadAllTodoItems().map { list -> list.map { TodoMapper.entityToModel(it) } }
 
@@ -62,7 +55,6 @@ class TodoItemsRepositoryImpl @Inject constructor(
     }
 
     private val connectException = ConnectException("Connection error")
-    private val badRequestException = BadRequestException()
 
     override fun getItemsFlow(): Flow<List<TodoItem>> = todoItems
     override suspend fun addItem(todoItem: TodoItem): Result<Boolean> =
