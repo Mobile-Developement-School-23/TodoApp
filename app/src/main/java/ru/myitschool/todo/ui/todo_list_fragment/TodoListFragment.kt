@@ -149,7 +149,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         binding.todoList.adapter = adapter
         binding.todoList.addItemDecoration(
             TodoItemDecoration(
-                bottomOffset = 10f.toPx.toInt(),
+                bottomOffset = 4f.toPx.toInt(),
                 leftOffset = 2f.toPx.toInt(),
                 rightOffset = 2f.toPx.toInt()
             )
