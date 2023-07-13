@@ -7,4 +7,8 @@ interface SharedPreferencesRepository {
     fun setTheme(theme:Int)
     fun setAuthToken(token:String)
     fun getAuthToken():String?
+
+    fun writeNotificationPermission(isGranted:Boolean)
+
+    fun readNotificationPermission():Boolean?
 }

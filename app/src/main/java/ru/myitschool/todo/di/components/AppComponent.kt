@@ -9,10 +9,13 @@ import ru.myitschool.todo.di.modules.NetworkModule
 import ru.myitschool.todo.di.modules.RepositoryModule
 import ru.myitschool.todo.di.modules.RoomModule
 import ru.myitschool.todo.di.scopes.AppScope
-import ru.myitschool.todo.ui.MainActivity
-import ru.myitschool.todo.ui.addition_fragment.AdditionViewModel
-import ru.myitschool.todo.ui.settings_fragment.view.SettingsViewModel
-import ru.myitschool.todo.ui.todo_list_fragment.TodoListViewModel
+import ru.myitschool.todo.ui.activity.MainActivity
+import ru.myitschool.todo.ui.activity.MainActivityViewModel
+import javax.inject.Qualifier
+
+
+@Qualifier
+annotation class AppContext
 
 @Component(modules = [NetworkModule::class, RepositoryModule::class, RoomModule::class])
 @AppScope
@@ -20,7 +23,9 @@ interface AppComponent {
     @Component.Factory
     interface Factory {
         fun create(
-            @BindsInstance context: Context
+            @AppContext
+            @BindsInstance
+            context: Context
         ): AppComponent
     }
 
@@ -30,4 +35,5 @@ interface AppComponent {
     fun inject(worker: NetworkWorker)
     fun inject(app: App)
     fun inject(activity: MainActivity)
+    fun mainActivityViewModel(): MainActivityViewModel
 }

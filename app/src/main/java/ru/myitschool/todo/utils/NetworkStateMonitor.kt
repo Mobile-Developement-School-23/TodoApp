@@ -6,11 +6,12 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import ru.myitschool.todo.di.components.AppContext
 import ru.myitschool.todo.di.scopes.AppScope
 import javax.inject.Inject
 
 @AppScope
-class NetworkStateMonitor @Inject constructor(context: Context){
+class NetworkStateMonitor @Inject constructor(@AppContext context: Context){
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val _isConnected = MutableStateFlow(true)
     val isConnected: StateFlow<Boolean> = _isConnected
