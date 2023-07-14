@@ -3,11 +3,9 @@ package ru.myitschool.todo
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import ru.myitschool.todo.data.repository.TodoItemsRepository
+import ru.myitschool.todo.data.repository.impl.TodoItemsRepositoryImpl
 import java.lang.Exception
 import javax.inject.Inject
 

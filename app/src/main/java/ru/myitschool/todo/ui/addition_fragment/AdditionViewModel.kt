@@ -9,12 +9,16 @@ import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.data.repository.TodoItemsRepository
+import ru.myitschool.todo.utils.UploadHelper
 import java.security.MessageDigest
 import java.util.Date
 import javax.inject.Inject
 import kotlin.random.Random
 
-class AdditionViewModel @Inject constructor(private val repository: TodoItemsRepository) : ViewModel() {
+class AdditionViewModel @Inject constructor(
+    private val repository: TodoItemsRepository,
+    private val uploadHelper: UploadHelper
+) : ViewModel() {
     private val _priority = MutableStateFlow(Priority.NORMAL)
     private val _text = MutableStateFlow("")
     private val _deadlineDate = MutableStateFlow<Date?>(null)
@@ -60,12 +64,17 @@ class AdditionViewModel @Inject constructor(private val repository: TodoItemsRep
                 creationDate = Date(),
                 deadline = deadlineDate.value
             )
-            viewModelScope.launch (Dispatchers.IO){
-                val value = repository.getItemById(todoItem.id)
+            viewModelScope.launch(Dispatchers.IO) {
+                var value: TodoItem? = null
+                repository.getItemById(todoItem.id).onSuccess {
+                    value = it
+                }.onFailure {
+                    value = null
+                }
                 if (value == null) {
-                    repository.addItem(todoItem)
+                    uploadHelper.addItem(todoItem)
                 } else {
-                    repository.updateItem(todoItem, true)
+                    uploadHelper.updateItem(todoItem, true)
                 }
                 isLoadedFlow.value = true
             }
@@ -77,8 +86,11 @@ class AdditionViewModel @Inject constructor(private val repository: TodoItemsRep
         canDelete = true
         if (!isLoaded) {
             isLoaded = true
-            viewModelScope.launch(Dispatchers.IO) {
-                val todoItem = repository.getItemById(id)
+            viewModelScope.launch {
+                var todoItem: TodoItem? = null
+                repository.getItemById(id).onSuccess {
+                    todoItem = it
+                }
                 _text.value = todoItem?.text ?: ""
                 _deadlineDate.value = todoItem?.deadline
                 _priority.value = todoItem?.priority ?: Priority.NORMAL
@@ -93,7 +105,7 @@ class AdditionViewModel @Inject constructor(private val repository: TodoItemsRep
     fun deleteTodoItem() {
         if (canDelete) {
             canDelete = false
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch {
                 repository.deleteItem(id)
                 _isDeleted.value = true
             }
@@ -102,7 +114,7 @@ class AdditionViewModel @Inject constructor(private val repository: TodoItemsRep
 
     private fun hashString(str: String): String {
         return MessageDigest.getInstance("sha-256").digest(str.toByteArray())
-            .fold("") { string, it -> string + "%02x".format(it) }
+            .fold("") { string, hs -> string + "%02x".format(hs) }
     }
 
 }

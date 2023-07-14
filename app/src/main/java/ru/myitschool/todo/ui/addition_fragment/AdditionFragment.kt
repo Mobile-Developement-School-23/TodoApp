@@ -12,7 +12,9 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.snackbar.Snackbar
@@ -22,7 +24,7 @@ import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.databinding.FragmentAdditionBinding
 import ru.myitschool.todo.ui.ViewModelFactory
-import java.util.Date
+import java.util.Calendar
 import java.util.Locale
 
 class AdditionFragment : Fragment() {
@@ -31,9 +33,10 @@ class AdditionFragment : Fragment() {
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
-    private val viewModel: AdditionViewModel by viewModels{
-        ViewModelFactory{
-            (requireActivity().application as App).getAppComponent().additionViewModel()
+    private val viewModel: AdditionViewModel by viewModels {
+        ViewModelFactory {
+            (requireActivity().application as App).getAppComponent().additionFragmentComponent()
+                .additionViewModel()
         }
     }
     private val errorToast: Toast by lazy {
@@ -54,60 +57,31 @@ class AdditionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        lifecycleScope.launch {
-            viewModel.isDeleted.collect {
-                if (it) {
-                    navController.popBackStack()
-                }
-            }
-        }
-        lifecycleScope.launch {
-            viewModel.text.collect {
-                if (it != binding.todoEditText.text.toString()) {
-                    binding.todoEditText.setText(it)
-                }
-            }
-        }
-        lifecycleScope.launch {
-            viewModel.priority.collect {
-                when (it) {
-                    Priority.LOW -> {
-                        binding.priorityText.setText(R.string.low)
-                    }
-
-                    Priority.NORMAL -> {
-                        binding.priorityText.setText(R.string.no)
-                    }
-
-                    Priority.HIGH -> {
-                        binding.priorityText.setText(R.string.high)
-                    }
-                }
-            }
-        }
-        lifecycleScope.launch {
-            viewModel.deadlineDate.collect {
-                if (it != null) {
-                    binding.deadlineSwitcher.isChecked = true
-                    val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
-                    binding.deadlineTextview.text = dateFormat.format(it)
-                    binding.deadlineTextview.visibility = View.VISIBLE
-                } else {
-                    binding.deadlineTextview.visibility = View.INVISIBLE
-                }
-            }
-        }
+        observeViewModel()
+        binding.deleteButton.isEnabled = false
         binding.todoEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
                 viewModel.setText(binding.todoEditText.text.toString())
             }
         })
+        setupDeadline()
+        binding.close.setOnClickListener {
+            navController.popBackStack()
+        }
+        setupSaveButton()
+        binding.priority.setOnClickListener {
+            showPopupMenu(binding.priorityText)
+        }
+        binding.deleteButton.setOnClickListener {
+            viewModel.deleteTodoItem()
+        }
+        recognizeScreen()
+    }
+    private fun setupDeadline(){
         binding.deadlineSwitcher.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (viewModel.deadlineDate.value == null) {
@@ -117,12 +91,15 @@ class AdditionFragment : Fragment() {
                 viewModel.setDeadline(null)
             }
         }
-        binding.close.setOnClickListener {
-            navController.popBackStack()
-        }
+    }
+    private fun setupSaveButton() {
         binding.save.setOnClickListener {
-            if (!binding.close.isEnabled){
-                Snackbar.make(binding.deleteButton, "Saving", Snackbar.LENGTH_SHORT).show()
+            if (!binding.close.isEnabled) {
+                Snackbar.make(
+                    binding.deleteButton,
+                    resources.getString(R.string.save),
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
             if (binding.todoEditText.text.isEmpty()) {
                 errorToast.show()
@@ -137,16 +114,67 @@ class AdditionFragment : Fragment() {
                 }
             }
         }
-        binding.priority.setOnClickListener {
-            showPopupMenu(binding.priorityText)
-        }
-        binding.deleteButton.setOnClickListener {
-            viewModel.deleteTodoItem()
-        }
+    }
+
+    private fun recognizeScreen() {
         val id = arguments?.getString("id")
         if (id != null) {
             viewModel.loadTodoItem(id)
             enableDeleteButton()
+        }
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isDeleted.collect {
+                    if (it) {
+                        navController.popBackStack()
+                    }
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.text.collect {
+                    if (it != binding.todoEditText.text.toString()) {
+                        binding.todoEditText.setText(it)
+                    }
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.priority.collect {
+                    when (it) {
+                        Priority.LOW -> {
+                            binding.priorityText.setText(R.string.low)
+                        }
+
+                        Priority.NORMAL -> {
+                            binding.priorityText.setText(R.string.no)
+                        }
+
+                        Priority.HIGH -> {
+                            binding.priorityText.setText(R.string.high)
+                        }
+                    }
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.deadlineDate.collect {
+                    if (it != null) {
+                        binding.deadlineSwitcher.isChecked = true
+                        val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
+                        binding.deadlineTextview.text = dateFormat.format(it)
+                        binding.deadlineTextview.visibility = View.VISIBLE
+                    } else {
+                        binding.deadlineTextview.visibility = View.INVISIBLE
+                    }
+                }
+            }
         }
     }
 
@@ -179,8 +207,9 @@ class AdditionFragment : Fragment() {
     private fun showDatePickerDialog() {
         val datePicker = DatePickerDialog(requireContext())
         datePicker.setOnDateSetListener { _, year, month, dayOfMonth ->
-            val date = Date(year - 1900, month, dayOfMonth)
-            viewModel.setDeadline(date)
+            val date = Calendar.getInstance()
+            date.set(year, month, dayOfMonth)
+            viewModel.setDeadline(date.time)
         }
         datePicker.setOnCancelListener {
             binding.deadlineSwitcher.isChecked = false
@@ -189,6 +218,7 @@ class AdditionFragment : Fragment() {
     }
 
     private fun enableDeleteButton() {
+        binding.deleteButton.isEnabled = true
         binding.deleteTextview.setTextColor(
             resources.getColor(
                 R.color.red,

@@ -2,18 +2,19 @@ package ru.myitschool.todo.ui.todo_list_fragment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.data.repository.TodoItemsRepository
-import ru.myitschool.todo.ui.adapters.ItemChanger
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemChanger
 import javax.inject.Inject
 
-class TodoListViewModel @Inject constructor(private val repository: TodoItemsRepository) : ViewModel(), ItemChanger {
-    companion object{
+class TodoListViewModel @Inject constructor(private val repository: TodoItemsRepository) :
+    ViewModel(),
+    ItemChanger {
+    companion object {
         private const val NONE = 0
         private const val HIGH = 1
         private const val LOW = 2
@@ -32,7 +33,7 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
 
     init {
         viewModelScope.launch {
-            repository.todoItems.collect {
+            repository.getItemsFlow().collect {
                 setFilterValue(filterValue.value)
             }
         }
@@ -40,14 +41,18 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
     }
 
     fun getItemsByPriority(priority: Priority) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _todoItems.value = repository.getItemsByPriority(priority)
+        viewModelScope.launch {
+            repository.getItemsByPriority(priority).onSuccess {
+                _todoItems.value = it
+            }
         }
     }
 
     fun getItems() {
-        viewModelScope.launch(Dispatchers.IO){
-            _todoItems.value = repository.getAllItems()
+        viewModelScope.launch {
+            repository.getAllItems().onSuccess {
+                _todoItems.value = it
+            }
         }
     }
 
@@ -61,36 +66,39 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
             NONE -> {
                 getItems()
             }
+
             HIGH -> {
                 getItemsByPriority(Priority.HIGH)
             }
+
             LOW -> {
                 getItemsByPriority(Priority.LOW)
             }
         }
     }
-    fun reloadData(callback:(error:Int)->Unit = {}) {
-        viewModelScope.launch (Dispatchers.IO){
-            repository.updateItems{
-                launch(Dispatchers.Main) {
-                    if (it) {
-                        callback(0)
-                    } else {
-                        callback(1)
-                    }
+
+    fun reloadData(callback: (error: Int) -> Unit = {}) {
+        viewModelScope.launch {
+            repository.updateItems().onSuccess {
+                if (it) {
+                    callback(1)
+                } else {
+                    callback(0)
                 }
+            }.onFailure {
+                callback(0)
             }
         }
     }
 
     override fun updateItem(todoItem: TodoItem, toTop: Boolean) {
-        viewModelScope.launch (Dispatchers.IO){
+        viewModelScope.launch {
             repository.updateItem(todoItem, toTop)
         }
     }
 
     override fun deleteItem(id: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             repository.deleteItem(id)
         }
     }

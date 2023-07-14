@@ -1,7 +1,9 @@
 package ru.myitschool.todo.ui.todo_list_fragment
 
 import android.animation.ObjectAnimator
+import android.content.res.Resources
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,36 +18,51 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.App
 import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.databinding.FragmentTodoListBinding
-import ru.myitschool.todo.ui.adapters.CounterCallback
-import ru.myitschool.todo.ui.adapters.SelectedCallback
-import ru.myitschool.todo.ui.adapters.TodoListAdapter
+import ru.myitschool.todo.di.components.TodolistFragmentComponent
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.CounterCallback
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.SelectedCallback
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoListAdapter
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperCallback
 import ru.myitschool.todo.ui.ViewModelFactory
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemChanger
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.OnCurrentListChangedListener
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoItemDecoration
+import javax.inject.Inject
 
 
 class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
+    companion object {
+        private const val DELETE_ANIMATION_DURATION = 40L
+        private const val FAB_ANIMATION_DURATION = 500L
+    }
 
     private var _binding: FragmentTodoListBinding? = null
     private val binding get() = _binding!!
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
-    private val viewModel: TodoListViewModel by viewModels{
+    private val component: TodolistFragmentComponent by lazy {
+        (requireActivity().application as App).getAppComponent().todolistFragmentComponentFactory()
+            .create(this)
+    }
+    private val viewModel: TodoListViewModel by viewModels {
         ViewModelFactory {
-            (requireActivity().application as App).getAppComponent().todoListViewModel()
+            component.todoListViewModel()
         }
     }
-    private val adapter: TodoListAdapter by lazy {
-        TodoListAdapter(viewModel, this, this)
-    }
+
+    @Inject
+    lateinit var adapter: TodoListAdapter
     private var isHidden = false
     private var fabPosition: Float = 0F
     private var scrolled: Boolean = false
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,11 +74,11 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
 
     }
 
+    fun getItemChanger(): ItemChanger = viewModel
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.settings.setOnClickListener {
-            navController.navigate(R.id.action_todoListFragment_to_settingsFragment)
-        }
+        component.inject(this)
         fabPosition = binding.addCase.translationY
         binding.appBar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             if (-verticalOffset == appBarLayout.totalScrollRange) {
@@ -74,26 +91,84 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             }
         }
 
-        binding.swipeRefresh.setColorSchemeResources(R.color.blue)
-        binding.swipeRefresh.setOnRefreshListener {
-            lifecycleScope.launch {
-                requestUpdateData()
-            }
-        }
-        binding.swipeRefresh.setOnChildScrollUpCallback { _, _ ->
-            binding.appBar
-            false
-        }
+        swipeLayoutSetup()
+        todoListSetup()
 
+        binding.addCase.setOnClickListener {
+            navController.navigate(R.id.action_todoListFragment_to_additionFragment)
+        }
         binding.filterTextview.setOnClickListener {
             showPopupMenu(it)
         }
+        binding.settings.setOnClickListener {
+            navController.navigate(R.id.action_todoListFragment_to_settingsFragment)
+        }
+        observeViewModel()
 
-        // Настройка recyclerview
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isExpanded.collect {
+                    if (!scrolled) {
+                        binding.appBar.setExpanded(it)
+                        scrolled = true
+                    }
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filterValue.collect {
+                    var text: Int = R.string.no
+                    when (it) {
+                        0 -> {
+                            text = R.string.no
+                        }
+
+                        1 -> {
+                            text = R.string.high
+                        }
+
+                        2 -> {
+                            text = R.string.low
+                        }
+                    }
+                    binding.filterTextview.setText(text)
+                }
+            }
+        }
+    }
+
+    private fun todoListSetup() {
         val callback = ItemTouchHelperCallback(adapter)
         val touchHelper = ItemTouchHelper(callback)
         binding.todoList.setItemViewCacheSize(adapter.itemCount)
+        binding.todoList.itemAnimator?.removeDuration = DELETE_ANIMATION_DURATION
         binding.todoList.adapter = adapter
+        binding.todoList.addItemDecoration(
+            TodoItemDecoration(
+                bottomOffset = 10f.toPx.toInt(),
+                leftOffset = 2f.toPx.toInt(),
+                rightOffset = 2f.toPx.toInt()
+            )
+        )
+        adapter.setOnCurrentListChangedListener(object : OnCurrentListChangedListener {
+            override fun <T> onCurrentListChanged(
+                previous: MutableList<T>,
+                current: MutableList<T>
+            ) {
+                if (previous.isNotEmpty()) {
+                    val previousElement = previous[0]
+                    if (current.isNotEmpty()) {
+                        if (previousElement != current[0]) {
+                            binding.todoList.scrollToPosition(0)
+                        }
+                    }
+                }
+            }
+        })
         binding.todoList.setOnScrollChangeListener { _, _, _, _, oldScrollY ->
             animateFAB(oldScrollY)
         }
@@ -108,48 +183,24 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
                             } else {
                                 binding.emptyInfo.visibility = View.GONE
                             }
-                            val previousSize = adapter.itemCount
                             adapter.submitList(it)
-                            if (previousSize < adapter.itemCount) {
-                                binding.todoList.scrollToPosition(0)
-                            }
                         }
                     }
                 }
             }
         }
+    }
 
-        binding.addCase.setOnClickListener {
-            navController.navigate(R.id.action_todoListFragment_to_additionFragment)
-        }
-
-        //Подписывание на обновления
-        lifecycleScope.launch {
-            viewModel.isExpanded.collect {
-                if (!scrolled) {
-                    binding.appBar.setExpanded(it)
-                    scrolled = true
-                }
+    private fun swipeLayoutSetup() {
+        binding.swipeRefresh.setColorSchemeResources(R.color.blue)
+        binding.swipeRefresh.setOnRefreshListener {
+            lifecycleScope.launch {
+                requestUpdateData()
             }
         }
-        lifecycleScope.launch {
-            viewModel.filterValue.collect {
-                var text: Int = R.string.no
-                when (it) {
-                    0 -> {
-                        text = R.string.no
-                    }
-
-                    1 -> {
-                        text = R.string.high
-                    }
-
-                    2 -> {
-                        text = R.string.low
-                    }
-                }
-                binding.filterTextview.setText(text)
-            }
+        binding.swipeRefresh.setOnChildScrollUpCallback { _, _ ->
+            binding.appBar
+            false
         }
     }
 
@@ -239,21 +290,32 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         }
         if (changed) {
             animator.interpolator = AccelerateInterpolator()
-            animator.duration = 500
+            animator.duration = FAB_ANIMATION_DURATION
             animator.start()
         }
     }
 
     private fun requestUpdateData() {
-        lifecycleScope.launch {
-            viewModel.reloadData { error ->
-                if (_binding != null) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.reloadData { error ->
                     binding.swipeRefresh.isRefreshing = false
-                    if (error == 1) {
-                        Snackbar.make(binding.addCase, resources.getString(R.string.no_connection), Snackbar.LENGTH_SHORT).show()
+                    if (error == 0) {
+                        Snackbar.make(
+                            binding.addCase,
+                            resources.getString(R.string.no_connection),
+                            Snackbar.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
         }
     }
 }
+
+val Number.toPx
+    get() = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        this.toFloat(),
+        Resources.getSystem().displayMetrics
+    )

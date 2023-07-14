@@ -4,16 +4,20 @@ import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import ru.myitschool.todo.data.repository.SharedPreferencesRepository
-import ru.myitschool.todo.di.AppComponent
-import ru.myitschool.todo.di.DaggerAppComponent
+import ru.myitschool.todo.data.repository.impl.SharedPreferencesRepositoryImpl
+import ru.myitschool.todo.di.components.AppComponent
+import ru.myitschool.todo.di.components.DaggerAppComponent
+import ru.myitschool.todo.utils.Constants
+import ru.myitschool.todo.utils.NetworkListener
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class App: Application() {
     private lateinit var appComponent: AppComponent
     @Inject
-    lateinit var sharedRepository: SharedPreferencesRepository
+    lateinit var sharedRepository: SharedPreferencesRepositoryImpl
+    @Inject
+    lateinit var networkListener: NetworkListener
 
     override fun onCreate() {
         super.onCreate()
@@ -21,6 +25,7 @@ class App: Application() {
         appComponent.inject(this)
         registerWorker()
         setTheme()
+        networkListener.startListener()
     }
     fun getAppComponent() = appComponent
 
@@ -30,13 +35,13 @@ class App: Application() {
     }
     private fun setTheme(){
         when(sharedRepository.getTheme()){
-            0->{
+            Constants.LIGHT_THEME->{
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             }
-            1->{
+            Constants.DARK_THEME->{
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             }
-            2->{
+            Constants.SYSTEM_THEME->{
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             }
         }

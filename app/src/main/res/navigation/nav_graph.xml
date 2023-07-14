@@ -24,7 +24,11 @@
             app:popExitAnim="@anim/exit_right" />
         <action
             android:id="@+id/action_todoListFragment_to_settingsFragment"
-            app:destination="@id/settingsFragment" />
+            app:destination="@id/settingsFragment"
+            app:enterAnim="@anim/enter_right"
+            app:exitAnim="@anim/exit_right"
+            app:popEnterAnim="@anim/enter_left"
+            app:popExitAnim="@anim/exit_left" />
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"

@@ -13,7 +13,7 @@ import ru.myitschool.todo.data.models.TodoItem
 
 @Dao
 abstract class TodoDao{
-    @Query("select * from todo_items order by changed_at DESC")
+    @Query("select * from todo_items")
     abstract fun loadAllTodoItems(): Flow<List<TodoItemEntity>>
     @Insert
     abstract suspend fun insertTodoItem(todoItemEntity: TodoItemEntity)
