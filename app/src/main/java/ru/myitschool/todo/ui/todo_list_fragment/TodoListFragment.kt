@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.App
 import ru.myitschool.todo.R
@@ -26,14 +25,14 @@ import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.databinding.FragmentTodoListBinding
 import ru.myitschool.todo.di.components.TodolistFragmentComponent
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.CounterCallback
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.SelectedCallback
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoListAdapter
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperCallback
 import ru.myitschool.todo.ui.ViewModelFactory
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.CounterCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemChanger
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.OnCurrentListChangedListener
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.SelectedCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoItemDecoration
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoListAdapter
 import ru.myitschool.todo.utils.getStringPriority
 import javax.inject.Inject
 
@@ -147,6 +146,16 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filterValue.collect {
                     val text: String = getStringPriority(requireContext(), it)
+                    if (it == Priority.HIGH){
+                        binding.filterTextview.setTextColor(requireContext().getColor(R.color.red))
+                    }
+                    else{
+                        val typedValue = TypedValue()
+                        val theme = requireContext().theme
+                        theme.resolveAttribute(
+                            androidx.constraintlayout.widget.R.attr.textFillColor, typedValue, true)
+                        binding.filterTextview.setTextColor(typedValue.data)
+                    }
                     binding.filterTextview.text = text
                 }
             }
