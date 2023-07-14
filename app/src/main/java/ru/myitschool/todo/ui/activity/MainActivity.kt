@@ -56,9 +56,6 @@ import ru.myitschool.todo.utils.NetworkStateMonitor
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
-    companion object {
-        const val CHANNEL_ID = "ultra_hype_todo"
-    }
 
     private val viewModel: MainActivityViewModel by viewModels {
         ViewModelFactory {
@@ -74,9 +71,6 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var networkStateMonitor: NetworkStateMonitor
-    private val manager: NotificationManager by lazy {
-        this.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-    }
 
     private val binding get() = _binding!!
 
@@ -96,9 +90,7 @@ class MainActivity : AppCompatActivity() {
                             binding.fragmentContainerView,
                             resources.getString(R.string.no_connection),
                             Snackbar.LENGTH_SHORT
-                        ).setAction("Check") {
-                            sendNotification()
-                        }.show()
+                        ).show()
                     }
                 }
             }
@@ -112,7 +104,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        setupNotifications()
     }
     private fun setupDialog(){
         binding.composeView.setContent {
@@ -129,18 +120,6 @@ class MainActivity : AppCompatActivity() {
                 })
             }
         }
-    }
-
-    private fun sendNotification() {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentText("HELLO")
-            .setSmallIcon(R.drawable.ic_add)
-            .build()
-        manager.notify(1, notification)
-
-    }
-    private fun setupNotifications(){
-        initializeNotificationChannel(manager = manager)
     }
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -166,12 +145,4 @@ class MainActivity : AppCompatActivity() {
             viewModel.savePermissionResult(grantResults[0] == PackageManager.PERMISSION_GRANTED)
         }
     }
-}
-
-
-fun initializeNotificationChannel(manager: NotificationManager) {
-    val channel: NotificationChannel = NotificationChannel(
-        MainActivity.CHANNEL_ID, "Todo channel", NotificationManager.IMPORTANCE_DEFAULT
-    )
-    manager.createNotificationChannel(channel)
 }

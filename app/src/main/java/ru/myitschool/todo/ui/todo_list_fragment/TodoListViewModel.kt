@@ -2,6 +2,7 @@ package ru.myitschool.todo.ui.todo_list_fragment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -14,14 +15,9 @@ import javax.inject.Inject
 class TodoListViewModel @Inject constructor(private val repository: TodoItemsRepository) :
     ViewModel(),
     ItemChanger {
-    companion object {
-        private const val NONE = 0
-        private const val HIGH = 1
-        private const val LOW = 2
-    }
 
-    private val _filterValue = MutableStateFlow(NONE)
-    val filterValue: StateFlow<Int> get() = _filterValue
+    private val _filterValue = MutableStateFlow(Priority.NORMAL)
+    val filterValue: StateFlow<Priority> get() = _filterValue
 
     private val _todoItems: MutableStateFlow<List<TodoItem>?> =
         MutableStateFlow(null)
@@ -29,6 +25,11 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
 
     private val _isExpanded = MutableStateFlow(true)
     val isExpanded: StateFlow<Boolean> get() = _isExpanded
+
+    private val _deleteTimer = MutableStateFlow(0)
+    val deleteTimer: StateFlow<Int> get() = _deleteTimer
+    private var savedTodoItem: TodoItem? = null
+    private var isDeleting = false
 
 
     init {
@@ -60,19 +61,15 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
         _isExpanded.value = value
     }
 
-    fun setFilterValue(value: Int) {
+    fun setFilterValue(value: Priority) {
         _filterValue.value = value
         when (value) {
-            NONE -> {
+            Priority.NORMAL -> {
                 getItems()
             }
 
-            HIGH -> {
-                getItemsByPriority(Priority.HIGH)
-            }
-
-            LOW -> {
-                getItemsByPriority(Priority.LOW)
+            else -> {
+                getItemsByPriority(value)
             }
         }
     }
@@ -97,9 +94,30 @@ class TodoListViewModel @Inject constructor(private val repository: TodoItemsRep
         }
     }
 
-    override fun deleteItem(id: String) {
+    override fun deleteItem(todoItem: TodoItem) {
         viewModelScope.launch {
-            repository.deleteItem(id)
+            repository.deleteItem(todoItem.id)
+        }
+        isDeleting = true
+        viewModelScope.launch {
+            savedTodoItem = todoItem
+            for (i in 5 downTo 0) {
+                if (!isDeleting || (savedTodoItem != null && todoItem.id != savedTodoItem!!.id)) {
+                    break
+                }
+                _deleteTimer.value = i
+                delay(1000)
+            }
+        }
+    }
+
+    fun cancelDeleting() {
+        isDeleting = false
+        if (savedTodoItem != null) {
+            viewModelScope.launch {
+                repository.addItem(savedTodoItem!!)
+            }
+            _deleteTimer.value = 0
         }
     }
 }

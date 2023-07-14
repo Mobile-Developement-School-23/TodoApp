@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.App
 import ru.myitschool.todo.R
+import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.databinding.FragmentTodoListBinding
 import ru.myitschool.todo.di.components.TodolistFragmentComponent
@@ -33,6 +34,7 @@ import ru.myitschool.todo.ui.ViewModelFactory
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemChanger
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.OnCurrentListChangedListener
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoItemDecoration
+import ru.myitschool.todo.utils.getStringPriority
 import javax.inject.Inject
 
 
@@ -62,6 +64,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
     private var isHidden = false
     private var fabPosition: Float = 0F
     private var scrolled: Boolean = false
+    private lateinit var timerSnackBar:Snackbar
 
 
     override fun onCreateView(
@@ -78,6 +81,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupTimer()
         component.inject(this)
         fabPosition = binding.addCase.translationY
         binding.appBar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
@@ -104,7 +108,28 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             navController.navigate(R.id.action_todoListFragment_to_settingsFragment)
         }
         observeViewModel()
+    }
 
+    private fun setupTimer(){
+        timerSnackBar = Snackbar.make(binding.addCase, "0", Snackbar.LENGTH_INDEFINITE)
+        timerSnackBar.setAction("Отменить"){
+            viewModel.cancelDeleting()
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.deleteTimer.collect{
+                    if (!timerSnackBar.isShown){
+                        timerSnackBar.setText(it.toString()).show()
+                    }
+                    if (it > 0){
+                        timerSnackBar.setText(it.toString())
+                    }
+                    else{
+                        timerSnackBar.dismiss()
+                    }
+                }
+            }
+        }
     }
 
     private fun observeViewModel() {
@@ -121,21 +146,8 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filterValue.collect {
-                    var text: Int = R.string.no
-                    when (it) {
-                        0 -> {
-                            text = R.string.no
-                        }
-
-                        1 -> {
-                            text = R.string.high
-                        }
-
-                        2 -> {
-                            text = R.string.low
-                        }
-                    }
-                    binding.filterTextview.setText(text)
+                    val text: String = getStringPriority(requireContext(), it)
+                    binding.filterTextview.text = text
                 }
             }
         }
@@ -250,17 +262,17 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.none -> {
-                    viewModel.setFilterValue(0)
+                    viewModel.setFilterValue(Priority.NORMAL)
                     true
                 }
 
                 R.id.high -> {
-                    viewModel.setFilterValue(1)
+                    viewModel.setFilterValue(Priority.HIGH)
                     true
                 }
 
                 R.id.low -> {
-                    viewModel.setFilterValue(2)
+                    viewModel.setFilterValue(Priority.LOW)
                     true
                 }
 

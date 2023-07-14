@@ -1,6 +1,7 @@
 package ru.myitschool.todo.ui.addition_fragment
 
 import android.icu.text.SimpleDateFormat
+import android.provider.Contacts.Intents.UI
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,7 @@ import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.data.repository.TodoItemsRepository
 import ru.myitschool.todo.utils.UploadHelper
 import java.security.MessageDigest
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -28,7 +30,7 @@ enum class UIError {
 
 sealed class UIState {
     object Deleted : UIState()
-    object Saved : UIState()
+    data class Saved(val todoItem:TodoItem):UIState()
     data class Error(val message: UIError) : UIState()
     object Default : UIState()
 }
@@ -47,6 +49,13 @@ class AdditionViewModel @Inject constructor(
             return@map ""
         }
         val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
+        return@map dateFormat.format(it)
+    }
+    val deadlineTime: Flow<String> = _deadlineDate.map {
+        if (it == null){
+            return@map ""
+        }
+        val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         return@map dateFormat.format(it)
     }
     private var loadedTodoItem: TodoItem? = null
@@ -105,7 +114,7 @@ class AdditionViewModel @Inject constructor(
                 } else {
                     uploadHelper.updateItem(todoItem, true)
                 }
-                _uiState.send(UIState.Saved)
+                _uiState.send(UIState.Saved(todoItem))
             }
         }
     }
@@ -148,5 +157,13 @@ class AdditionViewModel @Inject constructor(
         viewModelScope.launch{
             _uiState.send(UIState.Default)
         }
+    }
+    fun setDeadlineTime(hours:Int, minutes:Int){
+        val calendar = Calendar.getInstance()
+        val date = _deadlineDate.value
+        calendar.time =date?:Date()
+        calendar.set(Calendar.HOUR, hours)
+        calendar.set(Calendar.MINUTE, minutes)
+        _deadlineDate.value = calendar.time
     }
 }

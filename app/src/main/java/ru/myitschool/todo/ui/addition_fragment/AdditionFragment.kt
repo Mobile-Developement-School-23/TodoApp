@@ -1,6 +1,8 @@
 package ru.myitschool.todo.ui.addition_fragment
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.app.TimePickerDialog.OnTimeSetListener
 import android.content.Context
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -8,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CalendarView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -24,12 +25,12 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -57,6 +58,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -65,7 +67,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavController
@@ -79,18 +80,27 @@ import ru.myitschool.todo.R
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.data.repository.TodoItemsRepository
+import ru.myitschool.todo.di.components.AdditionFragmentComponent
 import ru.myitschool.todo.ui.ViewModelFactory
 import ru.myitschool.todo.ui.compose.AppTheme
+import ru.myitschool.todo.utils.notifications.NotificationScheduler
 import ru.myitschool.todo.utils.UploadHelper
 import java.util.Calendar
+import javax.inject.Inject
 
 class AdditionFragment : Fragment() {
+    @Inject
+    lateinit var scheduler: NotificationScheduler
     private val navController: NavController by lazy {
         NavHostFragment.findNavController(this)
     }
+    private val component: AdditionFragmentComponent by lazy {
+        (requireActivity().application as App).getAppComponent().additionFragmentComponent()
+    }
+
     private val viewModel: AdditionViewModel by viewModels {
         ViewModelFactory {
-            (requireActivity().application as App).getAppComponent().additionFragmentComponent()
+            component
                 .additionViewModel()
         }
     }
@@ -100,12 +110,18 @@ class AdditionFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         recognizeScreen()
+        component.inject(this)
         return ComposeView(requireContext()).apply {
             setContent {
                 AppTheme {
                     MainScreen(
-                        viewModel,
-                    ) { navController.popBackStack() }
+                        viewModel, popBackStack = { navController.popBackStack() },
+                        onSave = {
+                            if (it.deadline != null) {
+                                scheduler.scheduleNotification(it.id, it.deadline)
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -124,7 +140,8 @@ class AdditionFragment : Fragment() {
 @Composable
 private fun MainScreen(
     viewModel: AdditionViewModel,
-    popBackStack: () -> Unit
+    popBackStack: () -> Unit,
+    onSave: (todoItem: TodoItem) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var sheetState by remember { mutableStateOf(false) }
@@ -156,8 +173,9 @@ private fun MainScreen(
                         scope.launch { sheetState = true }
                     }
                     Divider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
-                    DeadlineSelector(
+                    TimeDeadlineSelector(
                         viewModel.deadlineDate.collectAsState(initial = "").value,
+                        viewModel.deadlineTime.collectAsState(initial = "").value,
                         viewModel
                     )
                 }
@@ -176,7 +194,8 @@ private fun MainScreen(
                 UIStateHolder(
                     uiState = viewModel.uiState.collectAsState(initial = UIState.Default).value,
                     viewModel,
-                    popBackStack
+                    popBackStack,
+                    onSave
                 )
             }
         }
@@ -201,10 +220,8 @@ private fun MainScreenPreviewDark() {
     viewModel.setPriority(Priority.HIGH)
     AppTheme {
         MainScreen(
-            viewModel
-        ) {
-
-        }
+            viewModel, {}, {}
+        )
     }
 }
 
@@ -213,10 +230,8 @@ private fun MainScreenPreviewDark() {
 private fun MainScreenPreviewLight() {
     AppTheme {
         MainScreen(
-            AdditionViewModel(FakeRepository(), UploadHelper(FakeRepository()))
-        ) {
-
-        }
+            AdditionViewModel(FakeRepository(), UploadHelper(FakeRepository())), {}, {}
+        )
     }
 }
 
@@ -224,19 +239,21 @@ private fun MainScreenPreviewLight() {
 private fun UIStateHolder(
     uiState: UIState,
     viewModel: AdditionViewModel,
-    popBackStack: () -> Unit
+    popBackStack: () -> Unit,
+    onSave: (todoItem: TodoItem) -> Unit
 ) {
-    println(uiState)
     when (uiState) {
         UIState.Deleted -> {
             popBackStack.invoke()
         }
 
-        UIState.Saved -> {
-            popBackStack.invoke()
-        }
 
-        else -> {}
+        else -> {
+            if (uiState is UIState.Saved) {
+                onSave.invoke(uiState.todoItem)
+                popBackStack.invoke()
+            }
+        }
     }
     var showing by remember { mutableStateOf(false) }
     if (uiState is UIState.Error) {
@@ -291,17 +308,56 @@ private fun DeleteButton(isDeletable: Boolean, viewModel: AdditionViewModel) {
 }
 
 @Composable
-private fun DeadlineSelector(date: String, viewModel: AdditionViewModel) {
+private fun TimeDeadlineSelector(date: String, time: String, viewModel: AdditionViewModel) {
+    Column {
+        DeadlineDateSelector(date, viewModel = viewModel)
+        DeadlineTimeSelector(date.isNotEmpty(), time, viewModel = viewModel)
+    }
+}
+
+@Composable
+fun DeadlineTimeSelector(enabled: Boolean, time: String, viewModel: AdditionViewModel) {
     var switchChecked by remember {
         mutableStateOf(false)
     }
-    var datePicker by remember {
+    switchChecked = time != ""
+    val context = LocalContext.current
+    var color = MaterialTheme.colorScheme.secondary
+    if (!enabled) {
+        color = MaterialTheme.colorScheme.outlineVariant
+    }
+    Box(Modifier.fillMaxWidth()) {
+        Column(Modifier.align(Alignment.CenterStart)) {
+            Text(
+                text = stringResource(id = R.string.time),
+                color = color,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+            Text(
+                text = time,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Image(
+            painter = rememberVectorPainter(image = Icons.Filled.DateRange),
+            contentDescription = "Time",
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .clickable(enabled=enabled) {
+                    showTimePickerDialog(viewModel, context)
+                },
+            colorFilter = ColorFilter.tint(color)
+        )
+    }
+}
+
+@Composable
+fun DeadlineDateSelector(date: String, viewModel: AdditionViewModel) {
+    var switchChecked by remember {
         mutableStateOf(false)
     }
     switchChecked = date != ""
-    if (switchChecked) {
-        datePicker = false
-    }
     val context = LocalContext.current
     Box(Modifier.fillMaxWidth()) {
         Column(Modifier.align(Alignment.CenterStart)) {
@@ -470,6 +526,21 @@ private fun AppBar(
             }
         }, modifier = Modifier.shadow(elevation = elevation)
     )
+}
+
+private fun showTimePickerDialog(viewModel: AdditionViewModel, context: Context) {
+    val calendar = Calendar.getInstance()
+    val listener = OnTimeSetListener { view, hour, minute ->
+        viewModel.setDeadlineTime(hour, minute)
+    }
+    val timePicker = TimePickerDialog(
+        context,
+        listener,
+        calendar.get(Calendar.HOUR),
+        calendar.get(Calendar.MINUTE),
+        true
+    )
+    timePicker.show()
 }
 
 private fun showDatePickerDialog(viewModel: AdditionViewModel, context: Context) {

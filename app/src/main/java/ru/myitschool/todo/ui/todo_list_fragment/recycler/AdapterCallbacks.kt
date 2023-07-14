@@ -4,7 +4,7 @@ import ru.myitschool.todo.data.models.TodoItem
 
 interface ItemChanger {
     fun updateItem(todoItem: TodoItem, toTop: Boolean)
-    fun deleteItem(id: String)
+    fun deleteItem(todoItem: TodoItem)
 }
 interface SelectedCallback{
     fun onSelect(todoItem: TodoItem)
