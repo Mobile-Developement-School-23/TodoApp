@@ -11,6 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import ru.myitschool.todo.data.data_sources.network.todoitems_server.TodoService
 import ru.myitschool.todo.data.data_sources.network.yandex_passport.YandexPassportService
 import ru.myitschool.todo.data.data_sources.room.database.AppDatabase
+import ru.myitschool.todo.di.components.AppContext
 import ru.myitschool.todo.di.scopes.AppScope
 import ru.myitschool.todo.utils.Constants
 import ru.myitschool.todo.utils.NetworkInterceptor
@@ -43,7 +44,7 @@ interface NetworkModule {
 
         @AppScope
         @Provides
-        fun provideSharedPreferences(context: Context): SharedPreferences {
+        fun provideSharedPreferences(@AppContext context: Context): SharedPreferences {
             return context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
         }
     }

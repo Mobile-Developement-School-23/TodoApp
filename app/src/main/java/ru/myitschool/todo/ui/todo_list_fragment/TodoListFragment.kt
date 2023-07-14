@@ -18,21 +18,22 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.App
 import ru.myitschool.todo.R
+import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.databinding.FragmentTodoListBinding
 import ru.myitschool.todo.di.components.TodolistFragmentComponent
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.CounterCallback
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.SelectedCallback
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoListAdapter
-import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperCallback
 import ru.myitschool.todo.ui.ViewModelFactory
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.CounterCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemChanger
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.ItemTouchHelperCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.OnCurrentListChangedListener
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.SelectedCallback
 import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoItemDecoration
+import ru.myitschool.todo.ui.todo_list_fragment.recycler.TodoListAdapter
+import ru.myitschool.todo.utils.getStringPriority
 import javax.inject.Inject
 
 
@@ -62,6 +63,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
     private var isHidden = false
     private var fabPosition: Float = 0F
     private var scrolled: Boolean = false
+    private lateinit var timerSnackBar:Snackbar
 
 
     override fun onCreateView(
@@ -78,6 +80,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupTimer()
         component.inject(this)
         fabPosition = binding.addCase.translationY
         binding.appBar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
@@ -104,7 +107,28 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
             navController.navigate(R.id.action_todoListFragment_to_settingsFragment)
         }
         observeViewModel()
+    }
 
+    private fun setupTimer(){
+        timerSnackBar = Snackbar.make(binding.addCase, "0", Snackbar.LENGTH_INDEFINITE)
+        timerSnackBar.setAction("Отменить"){
+            viewModel.cancelDeleting()
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.deleteTimer.collect{
+                    if (!timerSnackBar.isShown){
+                        timerSnackBar.setText(it.toString()).show()
+                    }
+                    if (it > 0){
+                        timerSnackBar.setText(it.toString())
+                    }
+                    else{
+                        timerSnackBar.dismiss()
+                    }
+                }
+            }
+        }
     }
 
     private fun observeViewModel() {
@@ -121,21 +145,18 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filterValue.collect {
-                    var text: Int = R.string.no
-                    when (it) {
-                        0 -> {
-                            text = R.string.no
-                        }
-
-                        1 -> {
-                            text = R.string.high
-                        }
-
-                        2 -> {
-                            text = R.string.low
-                        }
+                    val text: String = getStringPriority(requireContext(), it)
+                    if (it == Priority.HIGH){
+                        binding.filterTextview.setTextColor(requireContext().getColor(R.color.red))
                     }
-                    binding.filterTextview.setText(text)
+                    else{
+                        val typedValue = TypedValue()
+                        val theme = requireContext().theme
+                        theme.resolveAttribute(
+                            androidx.constraintlayout.widget.R.attr.textFillColor, typedValue, true)
+                        binding.filterTextview.setTextColor(typedValue.data)
+                    }
+                    binding.filterTextview.text = text
                 }
             }
         }
@@ -149,7 +170,7 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         binding.todoList.adapter = adapter
         binding.todoList.addItemDecoration(
             TodoItemDecoration(
-                bottomOffset = 10f.toPx.toInt(),
+                bottomOffset = 4f.toPx.toInt(),
                 leftOffset = 2f.toPx.toInt(),
                 rightOffset = 2f.toPx.toInt()
             )
@@ -250,17 +271,17 @@ class TodoListFragment : Fragment(), SelectedCallback, CounterCallback {
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.none -> {
-                    viewModel.setFilterValue(0)
+                    viewModel.setFilterValue(Priority.NORMAL)
                     true
                 }
 
                 R.id.high -> {
-                    viewModel.setFilterValue(1)
+                    viewModel.setFilterValue(Priority.HIGH)
                     true
                 }
 
                 R.id.low -> {
-                    viewModel.setFilterValue(2)
+                    viewModel.setFilterValue(Priority.LOW)
                     true
                 }
 

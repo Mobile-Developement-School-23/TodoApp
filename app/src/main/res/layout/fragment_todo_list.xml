@@ -48,12 +48,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
                 android:layout_marginEnd="24dp"
-                android:drawableTint="?attr/textFillColor"
-                android:text="Filter"
-                android:textColor="?attr/textFillColor"
-                android:textSize="16sp"
+                android:text="@string/filter"
+                style="@style/Text.Body"
                 app:drawableEndCompat="@drawable/ic_filter_list"
-                app:layout_collapseMode="parallax" />
+                app:layout_collapseMode="parallax"
+                app:drawableTint="?attr/textFillColor" />
 
             <ImageView
                 android:id="@+id/settings"

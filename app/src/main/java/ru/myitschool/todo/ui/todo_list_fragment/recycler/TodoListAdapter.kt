@@ -83,7 +83,7 @@ class TodoListAdapter @Inject constructor(
     }
 
     override fun onItemDismiss(position: Int) {
-        itemChanger.deleteItem(currentList[position].id)
+        itemChanger.deleteItem(currentList[position])
     }
 
     override fun onItemChecked(position: Int) {

@@ -22,4 +22,9 @@ class UploadHelper @Inject constructor(private val repository: TodoItemsReposito
             repository.addItem(item)
         }
     }
+    fun deleteItem(id:String){
+        scope.launch {
+            repository.deleteItem(id)
+        }
+    }
 }

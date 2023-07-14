@@ -23,4 +23,7 @@
     <string name="no_connection">No connection</string>
     <string name="logout">Logout</string>
     <string name="login_with_yandex">Login with Yandex ID</string>
+    <string name="time">Time</string>
+    <string name="delay">Delay</string>
+    <string name="filter">Filter</string>
 </resources>

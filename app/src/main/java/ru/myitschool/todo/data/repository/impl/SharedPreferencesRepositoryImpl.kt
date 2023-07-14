@@ -20,4 +20,15 @@ class SharedPreferencesRepositoryImpl @Inject constructor(private val sharedPref
         sharedPreferences.edit().putString("token", token).apply()
 
     override fun getAuthToken() = sharedPreferences.getString("token", Constants.DEFAULT_TOKEN)
+    override fun writeNotificationPermission(isGranted: Boolean) {
+        sharedPreferences.edit().putInt("notification", if (isGranted) 1 else 0).apply()
+    }
+
+    override fun readNotificationPermission(): Boolean? {
+        val isGranted = sharedPreferences.getInt("notification", 2)
+        if (isGranted == 2){
+            return null
+        }
+        return isGranted == 1
+    }
 }

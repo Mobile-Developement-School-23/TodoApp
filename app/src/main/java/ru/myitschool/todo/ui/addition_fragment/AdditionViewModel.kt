@@ -1,19 +1,39 @@
 package ru.myitschool.todo.ui.addition_fragment
 
+import android.icu.text.SimpleDateFormat
+import android.provider.Contacts.Intents.UI
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import ru.myitschool.todo.data.models.Priority
 import ru.myitschool.todo.data.models.TodoItem
 import ru.myitschool.todo.data.repository.TodoItemsRepository
 import ru.myitschool.todo.utils.UploadHelper
 import java.security.MessageDigest
+import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.random.Random
+
+enum class UIError {
+    BadSave
+}
+
+sealed class UIState {
+    object Deleted : UIState()
+    data class Saved(val todoItem:TodoItem):UIState()
+    data class Error(val message: UIError) : UIState()
+    object Default : UIState()
+}
 
 class AdditionViewModel @Inject constructor(
     private val repository: TodoItemsRepository,
@@ -22,19 +42,33 @@ class AdditionViewModel @Inject constructor(
     private val _priority = MutableStateFlow(Priority.NORMAL)
     private val _text = MutableStateFlow("")
     private val _deadlineDate = MutableStateFlow<Date?>(null)
-    private val _isDeleted = MutableStateFlow(false)
     val priority: StateFlow<Priority> get() = _priority
-    val text: StateFlow<String> get() = _text
-    val deadlineDate: StateFlow<Date?> get() = _deadlineDate
-    val isDeleted: StateFlow<Boolean> get() = _isDeleted
+    val text = _text.asStateFlow()
+    val deadlineDate: Flow<String> = _deadlineDate.map {
+        if (it == null) {
+            return@map ""
+        }
+        val dateFormat = SimpleDateFormat("d MMMM yyyy", Locale.getDefault())
+        return@map dateFormat.format(it)
+    }
+    val deadlineTime: Flow<String> = _deadlineDate.map {
+        if (it == null){
+            return@map ""
+        }
+        val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        return@map dateFormat.format(it)
+    }
     private var loadedTodoItem: TodoItem? = null
     private var isLoaded = false
+    private val _uiState = Channel<UIState>()
+    val uiState = _uiState.receiveAsFlow()
 
     private var canDelete = false
     private var saved = false
 
 
-    var id: String = "id"
+    private var id = MutableStateFlow("id")
+    val isUpdateScreen: Flow<Boolean> get() = id.map { it != "id" }
     fun setPriority(value: Priority) {
         _priority.value = value
     }
@@ -47,14 +81,18 @@ class AdditionViewModel @Inject constructor(
         _deadlineDate.value = value
     }
 
-    fun saveCase(): StateFlow<Boolean> {
-        val isLoadedFlow = MutableStateFlow(false)
-        if (!saved) {
+    fun saveTodo() {
+        if (text.value.isEmpty()) {
+            viewModelScope.launch {
+                _uiState.send(UIState.Error(UIError.BadSave))
+            }
+        }
+        else if (!saved) {
             saved = true
             val todoItem = loadedTodoItem?.copy(
                 text = text.value,
                 priority = priority.value,
-                deadline = deadlineDate.value,
+                deadline = _deadlineDate.value,
                 changingDate = Date()
             ) ?: TodoItem(
                 id = hashString(Random.nextInt().toString()),
@@ -62,7 +100,7 @@ class AdditionViewModel @Inject constructor(
                 priority = priority.value,
                 isCompleted = false,
                 creationDate = Date(),
-                deadline = deadlineDate.value
+                deadline = _deadlineDate.value
             )
             viewModelScope.launch(Dispatchers.IO) {
                 var value: TodoItem? = null
@@ -76,10 +114,9 @@ class AdditionViewModel @Inject constructor(
                 } else {
                     uploadHelper.updateItem(todoItem, true)
                 }
-                isLoadedFlow.value = true
+                _uiState.send(UIState.Saved(todoItem))
             }
         }
-        return isLoadedFlow
     }
 
     fun loadTodoItem(id: String) {
@@ -98,16 +135,16 @@ class AdditionViewModel @Inject constructor(
                     loadedTodoItem = todoItem
                 }
             }
-            this.id = id
+            this.id.value = id
         }
     }
 
     fun deleteTodoItem() {
         if (canDelete) {
             canDelete = false
+            uploadHelper.deleteItem(id.value)
             viewModelScope.launch {
-                repository.deleteItem(id)
-                _isDeleted.value = true
+                _uiState.send(UIState.Deleted)
             }
         }
     }
@@ -116,5 +153,17 @@ class AdditionViewModel @Inject constructor(
         return MessageDigest.getInstance("sha-256").digest(str.toByteArray())
             .fold("") { string, hs -> string + "%02x".format(hs) }
     }
-
+    fun setDefaultUIState(){
+        viewModelScope.launch{
+            _uiState.send(UIState.Default)
+        }
+    }
+    fun setDeadlineTime(hours:Int, minutes:Int){
+        val calendar = Calendar.getInstance()
+        val date = _deadlineDate.value
+        calendar.time =date?:Date()
+        calendar.set(Calendar.HOUR, hours)
+        calendar.set(Calendar.MINUTE, minutes)
+        _deadlineDate.value = calendar.time
+    }
 }

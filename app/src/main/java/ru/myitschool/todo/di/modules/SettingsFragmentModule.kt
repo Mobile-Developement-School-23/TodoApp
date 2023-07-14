@@ -5,6 +5,7 @@ import com.yandex.authsdk.YandexAuthOptions
 import com.yandex.authsdk.YandexAuthSdk
 import dagger.Module
 import dagger.Provides
+import ru.myitschool.todo.di.components.AppContext
 import ru.myitschool.todo.di.scopes.FragmentScope
 
 @Module
@@ -12,7 +13,7 @@ interface SettingsFragmentModule {
     companion object{
         @Provides
         @FragmentScope
-        fun provideYandexAuthSdk(context:Context):YandexAuthSdk{
+        fun provideYandexAuthSdk(@AppContext context:Context):YandexAuthSdk{
             return YandexAuthSdk(context, YandexAuthOptions(context))
         }
     }

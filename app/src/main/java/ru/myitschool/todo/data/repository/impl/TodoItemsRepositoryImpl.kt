@@ -75,6 +75,8 @@ class TodoItemsRepositoryImpl @Inject constructor(
                     }.onFailure {
                         return@withContext Result.failure(it)
                     }
+                }catch (e:Exception){
+                    return@withContext Result.failure(e)
                 }
             }
             addDao.addTodo(TodoAddEntity(todoItem.id))
@@ -111,6 +113,8 @@ class TodoItemsRepositoryImpl @Inject constructor(
                     }.onFailure {
                         return@withContext Result.failure(it)
                     }
+                }catch (e:Exception){
+                    return@withContext Result.failure(e)
                 }
             }
             return@withContext Result.failure(connectException)
@@ -141,6 +145,8 @@ class TodoItemsRepositoryImpl @Inject constructor(
                 }.onFailure {
                     return@withContext Result.failure(it)
                 }
+            }catch (e:Exception){
+                return@withContext Result.failure(e)
             }
         }
         deleteDao.addDeleteItem(TodoDeleteEntity(id, Date().time))

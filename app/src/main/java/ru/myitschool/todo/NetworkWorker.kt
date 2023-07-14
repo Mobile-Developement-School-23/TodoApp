@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.runBlocking
+import ru.myitschool.todo.App
 import ru.myitschool.todo.data.repository.TodoItemsRepository
-import ru.myitschool.todo.data.repository.impl.TodoItemsRepositoryImpl
 import java.lang.Exception
 import javax.inject.Inject
 
